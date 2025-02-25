@@ -1,13 +1,13 @@
 import { expect } from "vitest";
 
-import { ref, isRef, Ref } from "vue";
+import { ref } from "vue";
 import { anything, instance, mock, verify, when } from "ts-mockito";
 
 import { ObjectValidationHandler } from "@/ValidationHandler/ObjectValidationHandler";
 import { Schema } from "@/Schema/Schema";
 
 import { VALID_TEST_OBJECT, VALID_NESTED_OBJECT } from "tests/fixtures/valid-data";
-import { DEFAULT_STRING, DEFAULT_TEST_OBJECT } from "tests/fixtures/default-data";
+import { DEFAULT_TEST_OBJECT } from "tests/fixtures/default-data";
 import { ValidationHandler } from "@/ValidationHandler/ValidationHandler";
 import { SchemaValidationError } from "@/Schema/SchemaValidationError";
 import { INVALID_TEST_OBJECT } from "tests/fixtures/invalid-data";
@@ -339,10 +339,10 @@ describe("ObjectValidationHandler", () => {
                     "objectField error",
                 ]);
                 expect(handler.errors.value).toEqual({
-                    stringField: ["stringField error"],
-                    numberField: ["numberField error"],
-                    booleanField: ["booleanField error"],
-                    objectField: ["objectField error"],
+                    stringField: expect.toBeIterable(["stringField error"]),
+                    numberField: expect.toBeIterable(["numberField error"]),
+                    booleanField: expect.toBeIterable(["booleanField error"]),
+                    objectField: expect.toBeIterable(["objectField error"]),
                 });
             });
         });
@@ -350,17 +350,112 @@ describe("ObjectValidationHandler", () => {
 
     describe("reset method", () => {
         describe("given a value", () => {
-            it("should reset handler value to provided value", () => {});
+            it("should reset handler value to provided value", () => {
+                const handler = new ObjectValidationHandler(instance(schemaMock), {
+                    value: INVALID_TEST_OBJECT,
+                });
+
+                handler.reset(VALID_NESTED_OBJECT);
+
+                expect(handler.value.value).toEqual(VALID_NESTED_OBJECT);
+            });
         });
 
         describe("given no value", () => {
-            it("should reset handler value to initial value", () => {});
+            it("should reset handler value to initial value", () => {
+                const handler = new ObjectValidationHandler(instance(schemaMock), {
+                    value: VALID_TEST_OBJECT,
+                });
 
-            it("should reset handler value to schema default if no initial value", () => {});
+                handler.value.value = INVALID_TEST_OBJECT;
+
+                handler.reset();
+
+                expect(handler.value.value).toEqual(VALID_TEST_OBJECT);
+            });
+
+            it("should reset handler value to schema default if no initial value", () => {
+                when(schemaMock.defaultValue).thenReturn(DEFAULT_TEST_OBJECT);
+                const handler = new ObjectValidationHandler(instance(schemaMock), {});
+
+                handler.reset();
+
+                expect(handler.value.value).toEqual(DEFAULT_TEST_OBJECT);
+            });
         });
 
-        it("should set isValid to false", () => {});
+        it("should set isValid to false", () => {
+            when(schemaMock.validate(anything(), anything())).thenReturn(true);
 
-        it("should reset errors", () => {});
+            const handler = new ObjectValidationHandler(instance(schemaMock), {
+                value: VALID_TEST_OBJECT,
+            });
+
+            handler.validate();
+            const wasValid = handler.isValid.value;
+
+            handler.reset();
+
+            // Because the handler starts at false, we need to ensure it was true before resetting
+            expect(wasValid).toBe(true);
+            expect(handler.isValid.value).toBe(false);
+        });
+
+        it("should reset errors", () => {
+            const stringFieldSchemaMock = mock(Schema);
+            when(stringFieldSchemaMock.validate(anything(), anything())).thenThrow(
+                new SchemaValidationError(["stringField error"])
+            );
+
+            const numberFieldSchemaMock = mock(Schema);
+            when(numberFieldSchemaMock.validate(anything(), anything())).thenThrow(
+                new SchemaValidationError(["numberField error"])
+            );
+
+            const booleanFieldSchemaMock = mock(Schema);
+            when(booleanFieldSchemaMock.validate(anything(), anything())).thenThrow(
+                new SchemaValidationError(["booleanField error"])
+            );
+
+            const objectFieldSchemaMock = mock(Schema);
+            when(objectFieldSchemaMock.validate(anything(), anything())).thenThrow(
+                new SchemaValidationError(["objectField error"])
+            );
+
+            when(schemaMock.fields).thenReturn({
+                stringField: instance(stringFieldSchemaMock),
+                numberField: instance(numberFieldSchemaMock),
+                booleanField: instance(booleanFieldSchemaMock),
+                objectField: instance(objectFieldSchemaMock),
+            });
+
+            const handler = new ObjectValidationHandler(instance(schemaMock), {
+                value: VALID_TEST_OBJECT,
+            });
+
+            handler.validate();
+
+            expect(handler.errors.value).toBeIterable([
+                "stringField error",
+                "numberField error",
+                "booleanField error",
+                "objectField error",
+            ]);
+            expect(handler.errors.value).toEqual({
+                stringField: expect.toBeIterable(["stringField error"]),
+                numberField: expect.toBeIterable(["numberField error"]),
+                booleanField: expect.toBeIterable(["booleanField error"]),
+                objectField: expect.toBeIterable(["objectField error"]),
+            });
+
+            handler.reset();
+
+            expect(handler.errors.value).toEqual({
+                stringField: expect.toBeIterable([]),
+                numberField: expect.toBeIterable([]),
+                booleanField: expect.toBeIterable([]),
+                objectField: expect.toBeIterable([]),
+            });
+        });
     });
 });

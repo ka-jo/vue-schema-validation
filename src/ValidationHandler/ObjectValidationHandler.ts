@@ -36,4 +36,6 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
     }
 }
 
+type ObjectValidationHandlerErrors = Record<string, ReadonlyRef<Iterable<string>>>;
+
 type ObjectValidationHandlerFields = Record<string, ValidationHandler>;
