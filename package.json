@@ -1,0 +1,26 @@
+{
+  "name": "schema-validation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "vitest --typecheck"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
+  "devDependencies": {
+    "ts-mockito": "^2.6.1",
+    "vite": "^6.1.0",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.0.6",
+    "vue": "^3.5.13",
+    "yup": "^1.6.1"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.13",
+    "yup": "^1.6.1"
+  }
+}
