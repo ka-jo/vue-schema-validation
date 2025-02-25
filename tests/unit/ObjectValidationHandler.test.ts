@@ -1,7 +1,7 @@
 import { expect } from "vitest";
 
 import { ref, isRef, Ref } from "vue";
-import { anything, instance, mock, when } from "ts-mockito";
+import { anything, instance, mock, verify, when } from "ts-mockito";
 
 import { ObjectValidationHandler } from "@/ValidationHandler/ObjectValidationHandler";
 import { Schema } from "@/Schema/Schema";
@@ -27,8 +27,8 @@ describe("ObjectValidationHandler", () => {
         });
 
         // This test ensures that the value property cannot be set to a new ref, not that the ref value can't be set
-        // Enforcing readonly at runtime is not worth the overhead for an internal class
-        // so this test is only to test the typing
+        // Enforcing readonly at runtime is not worth the overhead for an internal class.
+        // So we'll just ensure the property is typed as readonly.
         it("should be readonly", () => {
             const handler = new ObjectValidationHandler(instance(schemaMock), {});
 
@@ -81,8 +81,8 @@ describe("ObjectValidationHandler", () => {
 
         // Because we've established it's a ref by this point, test descriptions should read as if it's a regular property
 
-        // Enforcing the property is readonly at runtime is not worth the overhead for an internal class
-        // But we should ensure the ref value is readonly
+        // Enforcing the property is readonly at runtime is not worth the overhead for an internal class.
+        // So we'll ensure the property is typed as readonly and that the Vue ref is readonly.
         it("should be readonly", () => {
             const handler = new ObjectValidationHandler(instance(schemaMock), {});
             const originalErrors = handler.errors;
@@ -146,8 +146,8 @@ describe("ObjectValidationHandler", () => {
 
         // Because we've established it's a ref by this point, test descriptions should read as if it's a regular property
 
-        // Enforcing the property is readonly at runtime is not worth the overhead for an internal class
-        // But we should ensure the ref value is readonly
+        // Enforcing the property is readonly at runtime is not worth the overhead for an internal class.
+        // So we'll ensure the property is typed as readonly and that the Vue ref is readonly.
         it("should be readonly", () => {
             const handler = new ObjectValidationHandler(instance(schemaMock), {});
             const originalIsValid = handler.isValid;
@@ -194,18 +194,21 @@ describe("ObjectValidationHandler", () => {
     });
 
     describe("validate method", () => {
-        it("should delegate to field validation", () => {
-            const stringFieldSchemaMock = mock(Schema);
-            when(stringFieldSchemaMock.validate(anything(), anything())).thenReturn(true);
+        // I'm a little iffy on validating the child schemas here because it skips the fact
+        // that the child ValidationHandler should first be called, but I don't want to mock
+        // the child ValidationHandlers because that would mean mocking an internal of the test subject.
+        // Maybe in the future, the ObjectValidationHandler constructor could take a record of ValidationHandlers
+        // instead of building it itself?
+        let stringFieldSchemaMock: Schema<string>;
+        let numberFieldSchemaMock: Schema<number>;
+        let booleanFieldSchemaMock: Schema<boolean>;
+        let objectFieldSchemaMock: Schema<NestedObject>;
 
-            const numberFieldSchemaMock = mock(Schema);
-            when(numberFieldSchemaMock.validate(anything(), anything())).thenReturn(true);
-
-            const booleanFieldSchemaMock = mock(Schema);
-            when(booleanFieldSchemaMock.validate(anything(), anything())).thenReturn(true);
-
-            const objectFieldSchemaMock = mock(Schema);
-            when(objectFieldSchemaMock.validate(anything(), anything())).thenReturn(true);
+        beforeEach(() => {
+            stringFieldSchemaMock = mock(Schema);
+            numberFieldSchemaMock = mock(Schema);
+            booleanFieldSchemaMock = mock(Schema);
+            objectFieldSchemaMock = mock(Schema);
 
             when(schemaMock.fields).thenReturn({
                 stringField: instance(stringFieldSchemaMock),
@@ -213,24 +216,38 @@ describe("ObjectValidationHandler", () => {
                 booleanField: instance(booleanFieldSchemaMock),
                 objectField: instance(objectFieldSchemaMock),
             });
+        });
 
+        // Not sure if this is worth testing since it seems more focused on an implmentation detail than it is an outcome
+        it("should delegate to field validation", () => {
             const handler = new ObjectValidationHandler(instance(schemaMock), {
                 value: VALID_TEST_OBJECT,
             });
 
             handler.validate();
 
-            expect(schemaMock.validate).not.toHaveBeenCalled();
+            verify(schemaMock.validate(anything(), anything())).never();
 
-            expect(stringFieldSchemaMock.validate).toHaveBeenCalled();
-            expect(numberFieldSchemaMock.validate).toHaveBeenCalled();
-            expect(booleanFieldSchemaMock.validate).toHaveBeenCalled();
-            expect(objectFieldSchemaMock.validate).toHaveBeenCalled();
+            verify(stringFieldSchemaMock.validate(anything(), anything())).once();
+            verify(numberFieldSchemaMock.validate(anything(), anything())).once();
+            verify(booleanFieldSchemaMock.validate(anything(), anything())).once();
+            verify(objectFieldSchemaMock.validate(anything(), anything())).once();
         });
 
         describe("given valid data", () => {
             beforeEach(() => {
-                when(schemaMock.validate(VALID_TEST_OBJECT, anything())).thenReturn(true);
+                when(
+                    stringFieldSchemaMock.validate(VALID_TEST_OBJECT.stringField, anything())
+                ).thenReturn(true);
+                when(
+                    numberFieldSchemaMock.validate(VALID_TEST_OBJECT.numberField, anything())
+                ).thenReturn(true);
+                when(
+                    booleanFieldSchemaMock.validate(VALID_TEST_OBJECT.booleanField, anything())
+                ).thenReturn(true);
+                when(
+                    objectFieldSchemaMock.validate(VALID_TEST_OBJECT.objectField, anything())
+                ).thenReturn(true);
             });
 
             it("should return true", () => {
@@ -262,19 +279,72 @@ describe("ObjectValidationHandler", () => {
                 const errors = Array.from(handler.errors.value);
 
                 expect(errors).toHaveLength(0);
+                expect(handler.errors.value).toEqual({
+                    stringField: expect.toBeIterable([]),
+                    numberField: expect.toBeIterable([]),
+                    booleanField: expect.toBeIterable([]),
+                    objectField: expect.toBeIterable([]),
+                });
             });
         });
 
         describe("given invalid data", () => {
             beforeEach(() => {
-                when(schemaMock.validate(INVALID_TEST_OBJECT, anything())).thenThrow();
+                when(
+                    stringFieldSchemaMock.validate(INVALID_TEST_OBJECT.stringField, anything())
+                ).thenThrow(new SchemaValidationError(["stringField error"]));
+                when(
+                    numberFieldSchemaMock.validate(INVALID_TEST_OBJECT.numberField, anything())
+                ).thenThrow(new SchemaValidationError(["numberField error"]));
+                when(
+                    booleanFieldSchemaMock.validate(INVALID_TEST_OBJECT.booleanField, anything())
+                ).thenThrow(new SchemaValidationError(["booleanField error"]));
+                when(
+                    objectFieldSchemaMock.validate(INVALID_TEST_OBJECT.objectField, anything())
+                ).thenThrow(new SchemaValidationError(["objectField error"]));
             });
 
-            it("should return false", () => {});
+            it("should return false", () => {
+                const handler = new ObjectValidationHandler(instance(schemaMock), {
+                    value: INVALID_TEST_OBJECT,
+                });
 
-            it("should set isValid to false", () => {});
+                const returnValue = handler.validate();
 
-            it("should populate errors", () => {});
+                expect(returnValue).toBe(false);
+            });
+
+            it("should set isValid to false", () => {
+                const handler = new ObjectValidationHandler(instance(schemaMock), {
+                    value: INVALID_TEST_OBJECT,
+                });
+
+                handler.validate();
+
+                expect(handler.isValid.value).toBe(false);
+            });
+
+            it("should populate errors", () => {
+                const handler = new ObjectValidationHandler(instance(schemaMock), {
+                    value: INVALID_TEST_OBJECT,
+                });
+
+                handler.validate();
+                const errors = Array.from(handler.errors.value);
+
+                expect(errors).toEqual([
+                    "stringField error",
+                    "numberField error",
+                    "booleanField error",
+                    "objectField error",
+                ]);
+                expect(handler.errors.value).toEqual({
+                    stringField: ["stringField error"],
+                    numberField: ["numberField error"],
+                    booleanField: ["booleanField error"],
+                    objectField: ["objectField error"],
+                });
+            });
         });
     });
 

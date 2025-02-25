@@ -1,5 +1,5 @@
 expect.extend({
-    toBeIterable(received) {
+    toBeIterable(received, args: [Array<unknown>]) {
         const getIterator: Function = received[Symbol.iterator];
         if (!getIterator || typeof getIterator !== "function") {
             return failure(received, this.isNot);
@@ -10,6 +10,19 @@ expect.extend({
         }
         if (typeof iterator.next !== "function") {
             return failure(received, this.isNot);
+        }
+
+        const expected = args[0];
+        if (expected) {
+            const receivedValues = Array.from(received);
+            if (expected.length !== receivedValues.length) {
+                return failure(received, this.isNot);
+            }
+            for (const value of expected) {
+                if (!receivedValues.includes(value)) {
+                    return failure(received, this.isNot);
+                }
+            }
         }
         return success(received, this.isNot);
     },
