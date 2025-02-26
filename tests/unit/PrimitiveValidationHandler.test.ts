@@ -2,12 +2,11 @@ import { anything, instance, mock, when } from "ts-mockito";
 
 import { PrimitiveValidationHandler } from "@/ValidationHandler/PrimitiveValidationHandler";
 import { Schema } from "@/Schema/Schema";
-import { ReadonlyRef } from "@/Types/util";
+import { SchemaValidationError } from "@/Schema/SchemaValidationError";
 
 import { VALID_STRING } from "tests/fixtures/valid-data";
 import { DEFAULT_STRING } from "tests/fixtures/default-data";
 import { INVALID_STRING } from "tests/fixtures/invalid-data";
-import { SchemaValidationError } from "@/Schema/SchemaValidationError";
 
 describe("PrimitiveValidationHandler", () => {
     let schemaMock: Schema<string>;

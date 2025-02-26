@@ -1,16 +1,14 @@
 import { expect } from "vitest";
-
 import { anything, instance, mock, verify, when } from "ts-mockito";
 
 import { ObjectValidationHandler } from "@/ValidationHandler/ObjectValidationHandler";
+import { ValidationHandler } from "@/ValidationHandler/ValidationHandler";
 import { Schema } from "@/Schema/Schema";
+import { SchemaValidationError } from "@/Schema/SchemaValidationError";
 
 import { VALID_TEST_OBJECT, VALID_NESTED_OBJECT } from "tests/fixtures/valid-data";
 import { DEFAULT_TEST_OBJECT } from "tests/fixtures/default-data";
-import { ValidationHandler } from "@/ValidationHandler/ValidationHandler";
-import { SchemaValidationError } from "@/Schema/SchemaValidationError";
 import { INVALID_TEST_OBJECT } from "tests/fixtures/invalid-data";
-import { O } from "vitest/dist/chunks/reporters.DTtkbAtP";
 
 describe("ObjectValidationHandler", () => {
     let schemaMock: Schema<TestSchema>;
