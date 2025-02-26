@@ -1,6 +1,5 @@
 import { expect } from "vitest";
 
-import { ref } from "vue";
 import { anything, instance, mock, verify, when } from "ts-mockito";
 
 import { ObjectValidationHandler } from "@/ValidationHandler/ObjectValidationHandler";
@@ -11,6 +10,7 @@ import { DEFAULT_TEST_OBJECT } from "tests/fixtures/default-data";
 import { ValidationHandler } from "@/ValidationHandler/ValidationHandler";
 import { SchemaValidationError } from "@/Schema/SchemaValidationError";
 import { INVALID_TEST_OBJECT } from "tests/fixtures/invalid-data";
+import { O } from "vitest/dist/chunks/reporters.DTtkbAtP";
 
 describe("ObjectValidationHandler", () => {
     let schemaMock: Schema<TestSchema>;
@@ -26,6 +26,8 @@ describe("ObjectValidationHandler", () => {
             expect(handler.value).toBeVueRef();
         });
 
+        // Because we've established it's a ref by this point, test descriptions should read as if it's a regular property
+
         // This test ensures that the value property cannot be set to a new ref, not that the ref value can't be set
         // Enforcing readonly at runtime is not worth the overhead for an internal class.
         // So we'll just ensure the property is typed as readonly.
@@ -36,7 +38,7 @@ describe("ObjectValidationHandler", () => {
             handler.value = ref({});
         });
 
-        it("should be a ref of an object containing all schema fields", () => {
+        it("should be an object containing all schema fields", () => {
             when(schemaMock.fields).thenReturn({
                 stringField: {} as Schema<string>,
                 numberField: {} as Schema<number>,
@@ -85,11 +87,19 @@ describe("ObjectValidationHandler", () => {
         // So we'll ensure the property is typed as readonly and that the Vue ref is readonly.
         it("should be readonly", () => {
             const handler = new ObjectValidationHandler(instance(schemaMock), {});
-            const originalErrors = handler.errors;
-            const newErrors = ref([]);
+            const originalErrors = handler.errors.value;
+            const newErrors = {} as any;
 
             // @ts-expect-error
-            handler.errors = newErrors;
+            handler.errors.value = newErrors;
+
+            type Errors = Pick<ObjectValidationHandler, "errors">;
+
+            // This is a dumb way to ensure nobody removes the readonly from the class isn't it?  ¯\_(ツ)_/¯
+            expectTypeOf<Errors>().toEqualTypeOf<{
+                readonly errors: ObjectValidationHandler["errors"];
+            }>();
+
             expect(handler.errors).toBe(originalErrors);
         });
 
@@ -150,11 +160,18 @@ describe("ObjectValidationHandler", () => {
         // So we'll ensure the property is typed as readonly and that the Vue ref is readonly.
         it("should be readonly", () => {
             const handler = new ObjectValidationHandler(instance(schemaMock), {});
-            const originalIsValid = handler.isValid;
-            const newIsValid = ref(false);
+            const originalIsValid = handler.isValid.value;
+            const newIsValid = !originalIsValid;
 
             // @ts-expect-error
-            handler.isValid = newIsValid;
+            handler.isValid.value = newIsValid;
+
+            type IsValid = Pick<ObjectValidationHandler, "isValid">;
+
+            expectTypeOf<IsValid>().toEqualTypeOf<{
+                readonly isValid: ObjectValidationHandler["isValid"];
+            }>();
+
             expect(handler.isValid).toBe(originalIsValid);
         });
 

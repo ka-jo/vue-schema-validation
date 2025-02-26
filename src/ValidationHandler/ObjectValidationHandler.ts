@@ -14,7 +14,7 @@ import { ValidationHandler } from "./ValidationHandler";
  */
 export class ObjectValidationHandler extends ValidationHandler<object> {
     readonly value: Ref<object>;
-    readonly errors: ReadonlyRef<Iterable<string>>;
+    readonly errors: ReadonlyRef<ObjectValidationHandlerErrors>;
     readonly isValid: ReadonlyRef<boolean>;
     readonly fields: ObjectValidationHandlerFields;
 
@@ -22,6 +22,7 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
         super(schema, options);
 
         this.value = ref({});
+        //@ts-expect-error
         this.errors = ref([]);
         this.isValid = ref(false);
         this.fields = {};
@@ -36,6 +37,7 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
     }
 }
 
-type ObjectValidationHandlerErrors = Record<string, ReadonlyRef<Iterable<string>>>;
+type ObjectValidationHandlerErrors = Iterable<string> &
+    Record<string, ReadonlyRef<Iterable<string>>>;
 
 type ObjectValidationHandlerFields = Record<string, ValidationHandler>;
