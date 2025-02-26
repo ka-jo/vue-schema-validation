@@ -140,10 +140,14 @@ describe("ObjectValidationHandler", () => {
             });
 
             const handler = new ObjectValidationHandler(instance(schemaMock), {});
-            const errors = Array.from(handler.errors.value);
 
-            expect(handler.errors.value).toBeIterable();
-            expect(errors).toEqual(["requiredField", "optionalField"]);
+            expect(handler.errors.value).toBeIterable(["requiredField", "optionalField"]);
+        });
+
+        it("should initialize as an empty iterable", () => {
+            const handler = new ObjectValidationHandler(instance(schemaMock), {});
+
+            expect(handler.errors.value).toBeIterable([]);
         });
     });
 
@@ -293,9 +297,8 @@ describe("ObjectValidationHandler", () => {
                 });
 
                 handler.validate();
-                const errors = Array.from(handler.errors.value);
 
-                expect(errors).toHaveLength(0);
+                expect(handler.errors.value).toBeIterable([]);
                 expect(handler.errors.value).toEqual({
                     stringField: expect.toBeIterable([]),
                     numberField: expect.toBeIterable([]),
@@ -386,6 +389,8 @@ describe("ObjectValidationHandler", () => {
 
                 handler.value.value = INVALID_TEST_OBJECT;
 
+                expect(handler.value.value).toEqual(INVALID_TEST_OBJECT);
+
                 handler.reset();
 
                 expect(handler.value.value).toEqual(VALID_TEST_OBJECT);
@@ -409,12 +414,11 @@ describe("ObjectValidationHandler", () => {
             });
 
             handler.validate();
-            const wasValid = handler.isValid.value;
+
+            expect(handler.isValid.value).toBe(true);
 
             handler.reset();
 
-            // Because the handler starts at false, we need to ensure it was true before resetting
-            expect(wasValid).toBe(true);
             expect(handler.isValid.value).toBe(false);
         });
 
