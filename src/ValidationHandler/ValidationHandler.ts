@@ -6,6 +6,9 @@ import { ValidationOptions } from "@/Types/ValidationOptions";
 /**
  * Base class for managing validation state for a value
  * @typeParam T - Type of the value being validated. This is not the type of the schema itself, but the type the schema is validating
+ * @remarks
+ * For the most part, the type parameter T is only used to determine if fields should be present on the handler.
+ * Once the specific ValidationHandler implementation is created, it's much simpler for it to treat the value as a black box.
  * @internal
  */
 export abstract class ValidationHandler<T = unknown> {
