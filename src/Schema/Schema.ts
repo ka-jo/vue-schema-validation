@@ -28,7 +28,7 @@ export abstract class Schema<T = unknown> {
     /**
      * Default value for the schema
      */
-    abstract readonly defaultValue: Partial<T>;
+    abstract readonly defaultValue?: Partial<T>;
 }
 
 export type SchemaFields<T> = T extends object
