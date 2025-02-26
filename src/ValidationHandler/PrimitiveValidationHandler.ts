@@ -1,6 +1,7 @@
 import { ref, Ref } from "vue";
 
 import { ValidationOptions } from "@/Types/ValidationOptions";
+import { ReadonlyRef } from "@/Types/util";
 import { Schema } from "@/Schema/Schema";
 
 import { ValidationHandler } from "./ValidationHandler";
@@ -12,9 +13,9 @@ import { ValidationHandler } from "./ValidationHandler";
  * a single value, but may not be "primitive" in the traditional sense (e.g. Date)
  */
 export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
-    readonly value: Ref<unknown, unknown>;
-    readonly errors: Ref<Iterable<string>, Iterable<string>>;
-    readonly isValid: Ref<boolean, boolean>;
+    readonly value: Ref<unknown>;
+    readonly errors: ReadonlyRef<Iterable<string>>;
+    readonly isValid: ReadonlyRef<boolean>;
     /**
      * Even though fields is not used in this class, it is required to be defined by the base class
      */
