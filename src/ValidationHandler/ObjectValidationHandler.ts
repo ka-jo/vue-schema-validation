@@ -18,7 +18,7 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
     readonly isValid: ReadonlyRef<boolean>;
     readonly fields: ObjectValidationHandlerFields;
 
-    constructor(schema: Schema<object>, options: Omit<ValidationOptions<object>, "schema">) {
+    constructor(schema: Schema<"object">, options: Omit<ValidationOptions<object>, "schema">) {
         super(schema, options);
 
         this.value = ref({});

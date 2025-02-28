@@ -9,7 +9,7 @@ import {
 } from "yup";
 
 import { ValidationOptions } from "@/Types/ValidationOptions";
-import { Schema, SchemaFields } from "./Schema";
+import { Schema, SchemaFields, SchemaType, SchemaValue } from "./Schema";
 import { UnknownSchema } from "./UnknownSchema";
 import { SchemaValidationError } from "./SchemaValidationError";
 
@@ -19,24 +19,20 @@ const UNSUPPORTED_SCHEMA_TYPE_MESSAGE = "Received unsupported schema type when c
  * {@link Schema} implementation for interacting with schemas defined with Yup
  * @internal
  */
-export class YupSchema<T = unknown> extends Schema<T> {
+export class YupSchema<T extends SchemaType = SchemaType> extends Schema<T> {
     private schema: yup_Schema;
 
     defaultValue?: Partial<T>;
     fields: SchemaFields<T>;
 
-    private constructor(
-        type: "object" | "array" | "primitive",
-        schema: yup_Schema<T>,
-        fields: SchemaFields<T>
-    ) {
+    private constructor(type: T, schema: yup_Schema, fields: SchemaFields<T>) {
         super(type);
         this.schema = schema;
         this.defaultValue = schema.spec.default;
         this.fields = fields;
     }
 
-    validate(value: T, options: ValidationOptions): boolean {
+    validate(value: SchemaValue<T>, options: ValidationOptions): boolean {
         try {
             this.schema.validateSync(value, options);
             return true;
@@ -71,7 +67,11 @@ export class YupSchema<T = unknown> extends Schema<T> {
         }
 
         if (YupSchema.isArraySchema(schema)) {
-            return new YupSchema("array", schema, {});
+            const fields = schema.innerType
+                ? YupSchema.create(schema.innerType)
+                : new UnknownSchema();
+
+            return new YupSchema("array", schema, fields);
         }
 
         if (YupSchema.isLazy(schema)) {

@@ -18,7 +18,7 @@ export abstract class ValidationHandler<T = unknown> {
      * The validation handler should not be concerned with interacting with library specific schemas (i.e. Yup schemas) directly.
      * Instead, it should interact with the schema through the {@link Schema} class to abstract away library specific interactions.
      */
-    protected readonly schema: Schema<T>;
+    protected readonly schema: Schema;
 
     /**
      * Options for validation
@@ -65,11 +65,11 @@ export abstract class ValidationHandler<T = unknown> {
      */
     abstract readonly fields: ValidationHandlerFields<T>;
 
-    // TODO: add schema property. it's type should be generic from the class that is the schema type from a specific library
-
     /**
      * Runs validations on current value and update errors and isValid accordingly
      * @returns true if the value is valid, false otherwise
+     * @remarks
+     * This will recursively call validate on all child fields to validate their values and update their errors and isValid as well.
      */
     abstract validate(): boolean;
 
@@ -78,14 +78,14 @@ export abstract class ValidationHandler<T = unknown> {
      * @remarks
      * This will recursively call reset on all child fields to clear their errors and set their isValid to false as well.
      * If a value is provided, it will be set as the new value for the handler.
-     * If no value is provided, the initial value from provided {@link ValidationOptions} will be used.
+     * If no value is provided, the initial value from the provided {@link ValidationOptions} will be used.
      * If no value is provided and the options did not provide an initial value, the schema's default value will be used.
      *
      * @param value - Optional value to set the {@link ValidationHandler.value} to
      */
     abstract reset(value?: T): void;
 
-    constructor(schema: Schema<T>, options: Omit<ValidationOptions<T>, "schema">) {
+    constructor(schema: Schema, options: Omit<ValidationOptions<T>, "schema">) {
         this.schema = schema;
         this.options = options;
         // Binding to instance so that 'this' is not Vue proxy

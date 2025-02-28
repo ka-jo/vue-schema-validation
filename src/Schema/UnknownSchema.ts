@@ -1,6 +1,6 @@
 import { Schema } from "./Schema";
 
-export class UnknownSchema extends Schema<unknown> {
+export class UnknownSchema extends Schema<"unknown"> {
     fields: undefined;
     defaultValue: undefined;
 

@@ -9,21 +9,21 @@ const UNSUPPORTED_SCHEMA_TYPE_MESSAGE =
  * Wrapper to allow implementing different schema validation libraries
  * @internal
  */
-export abstract class Schema<T = unknown> {
+export abstract class Schema<T extends SchemaType = SchemaType> {
     /**
-     * Validate the data using the provided options
-     * @param data - Data to validate
+     * Validate the value using the provided options
+     * @param value - Value to validate
      * @param options - Options to use for validation
      * @returns true if the data was valid
      * @throws a {@link SchemaValidationError} if the data was invalid
      */
-    abstract validate(data: T, options: ValidationOptions): boolean;
+    abstract validate(value: SchemaValue<T>, options: ValidationOptions): boolean;
 
     /**
-     * Child properties of the schema.
+     * The Schema instance to use when validating child fields of a schema.
      * @remarks
      * For object schemas, this will be an object with the same keys as the schema where each value is a {@link Schema}.
-     * For array schemas, this will be an object with numeric keys where each value is a {@link Schema}.
+     * For array schemas, this will be a {@link Schema} instance.
      * For non-object schemas, this will be undefined
      */
     abstract readonly fields: SchemaFields<T>;
@@ -35,16 +35,11 @@ export abstract class Schema<T = unknown> {
 
     /**
      * The type of the schema. This is used to determine which ValidationHandler implementation to use.
-     * @remarks
-     * We use the term "primitive" here loosely. Primitive in this case means any schema type that represents
-     * a single value, but is not necessarily a JavaScript primitive type. For example, a schema that represents
-     * a date value would be considered a "primitive" schema, even though Date is not a JavaScript primitive type.
-     * We use "unknown" just so we can more consistently create a schema, even if we don't know how to handle it as
-     * would be the case with Yup references for example.
-     */
-    readonly type: "object" | "array" | "primitive" | "unknown";
 
-    protected constructor(type: Schema["type"]) {
+     */
+    readonly type: SchemaType;
+
+    protected constructor(type: SchemaType) {
         this.type = type;
     }
 
@@ -63,8 +58,38 @@ export abstract class Schema<T = unknown> {
     }
 }
 
-export type SchemaFields<T> = T extends object
-    ? {
-          [P in keyof T]: Schema<T[P]>;
-      }
+/**
+ * Union of all possible schema types.
+ * @remarks
+ * We use the term "primitive" here loosely. Primitive in this case means any schema type that represents
+ * a single value, but is not necessarily a JavaScript primitive type. For example, a schema that represents
+ * a date value would be considered a "primitive" schema, even though Date is not a JavaScript primitive type.
+ * We use "unknown" just so we can more consistently create a schema, even if we don't know how to handle it as
+ * would be the case with Yup references for example.
+ * @internal
+ */
+export type SchemaType = "object" | "array" | "primitive" | "unknown";
+
+/**
+ * The type of the value being validated by a schema.
+ * We use 'unknown' because we don't care about the type for the most part. The value should be
+ * passed from the ValidationHandler to the Schema without any need to know exactly what it is.
+ * @internal
+ */
+export type SchemaValue<T extends SchemaType> = T extends "object"
+    ? Record<string, unknown>
+    : T extends "array"
+    ? Array<unknown>
+    : T extends "unknown"
+    ? undefined
+    : unknown;
+
+/**
+ * The type of the fields property of a schema.
+ * @internal
+ */
+export type SchemaFields<T extends SchemaType> = T extends "object"
+    ? Record<string, Schema>
+    : T extends "array"
+    ? Schema
     : undefined;

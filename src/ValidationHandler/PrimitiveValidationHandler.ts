@@ -21,7 +21,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
      */
     readonly fields: undefined;
 
-    constructor(schema: Schema<unknown>, options: Omit<ValidationOptions<unknown>, "schema">) {
+    constructor(schema: Schema<"primitive">, options: Omit<ValidationOptions<unknown>, "schema">) {
         super(schema, options);
 
         this.value = ref(undefined);
