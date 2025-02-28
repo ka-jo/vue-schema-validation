@@ -1,8 +1,117 @@
-import { ValidationOptions } from "@/Types/ValidationOptions";
-import { Schema } from "./Schema";
+import {
+    ISchema as yup_ISchema,
+    Schema as yup_Schema,
+    ObjectSchema as yup_ObjectSchema,
+    ArraySchema as yup_ArraySchema,
+    Lazy as yup_Lazy,
+    Reference as yup_Reference,
+    ValidationError as yup_ValidationError,
+} from "yup";
 
-export class YupSchema extends Schema {
-    validate(options: ValidationOptions): boolean {
-        throw new Error("Method not implemented.");
+import { ValidationOptions } from "@/Types/ValidationOptions";
+import { Schema, SchemaFields } from "./Schema";
+import { UnknownSchema } from "./UnknownSchema";
+import { SchemaValidationError } from "./SchemaValidationError";
+
+const UNSUPPORTED_SCHEMA_TYPE_MESSAGE = "Received unsupported schema type when creating YupSchema";
+
+/**
+ * {@link Schema} implementation for interacting with schemas defined with Yup
+ * @internal
+ */
+export class YupSchema<T = unknown> extends Schema<T> {
+    private schema: yup_Schema;
+
+    defaultValue?: Partial<T>;
+    fields: SchemaFields<T>;
+
+    private constructor(
+        type: "object" | "array" | "primitive",
+        schema: yup_Schema<T>,
+        fields: SchemaFields<T>
+    ) {
+        super(type);
+        this.schema = schema;
+        this.defaultValue = schema.spec.default;
+        this.fields = fields;
+    }
+
+    validate(value: T, options: ValidationOptions): boolean {
+        try {
+            this.schema.validateSync(value, options);
+            return true;
+        } catch (ex) {
+            if (ex instanceof yup_ValidationError) {
+                throw new SchemaValidationError(ex.errors);
+            } else {
+                throw ex;
+            }
+        }
+    }
+
+    /**
+     * This static method creates a {@link YupSchema} instance from a Yup schema.
+     * @param schema - a Yup schema
+     * @returns a {@link YupSchema} instance if the schema type can be determined, otherwise an {@link UnknownSchema}
+     * @throws a {@link TypeError} if the schema type is not supported
+     * @remarks
+     * Ensuring YupSchemas are created through this method keeps the constructor simple and consistent regardless of the schema type.
+     * It's unlikely a value would be passed to this function that would result in an error, but it simplifies
+     * the typing within this method and prevents needing to use TypeScript tricks to prevent compiler errors
+     */
+    public static create(schema: yup_ReferenceOrSchema): YupSchema | UnknownSchema {
+        if (YupSchema.isObjectSchema(schema)) {
+            const fields: Record<string, Schema> = {};
+
+            for (const field of Object.keys(schema.fields)) {
+                fields[field] = YupSchema.create(schema.fields[field]);
+            }
+
+            return new YupSchema("object", schema, fields);
+        }
+
+        if (YupSchema.isArraySchema(schema)) {
+            return new YupSchema("array", schema, {});
+        }
+
+        if (YupSchema.isLazy(schema)) {
+            // based on my experiments, you don't actually need a value to resolve a lazy schema
+            schema = schema.resolve({ value: undefined });
+            return YupSchema.create(schema);
+        }
+
+        if (YupSchema.isReference(schema)) {
+            return new UnknownSchema();
+        }
+
+        if (YupSchema.isYupSchema(schema)) {
+            return new YupSchema("primitive", schema, undefined);
+        }
+
+        throw new TypeError(UNSUPPORTED_SCHEMA_TYPE_MESSAGE);
+    }
+
+    public static isYupSchema(thing: unknown): thing is yup_Schema {
+        return typeof thing === "object" && thing !== null && "__isYupSchema__" in thing;
+    }
+
+    private static isObjectSchema(schema: yup_ReferenceOrSchema): schema is yup_ObjectSchema<any> {
+        return "type" in schema && schema.type === "object";
+    }
+
+    private static isArraySchema(
+        schema: yup_ReferenceOrSchema
+    ): schema is yup_ArraySchema<any, any> {
+        return "type" in schema && schema.type === "array";
+    }
+
+    private static isLazy(schema: yup_ReferenceOrSchema): schema is yup_Lazy<any> {
+        return "type" in schema && schema.type === "lazy";
+    }
+
+    private static isReference(schema: yup_ReferenceOrSchema): schema is yup_Reference<any> {
+        return "__isYupRef" in schema;
     }
 }
+
+type yup_ReferenceOrSchema = yup_Reference<any> | yup_ISchema<any, any, any, any>;
