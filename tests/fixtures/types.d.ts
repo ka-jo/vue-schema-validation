@@ -6,8 +6,6 @@ declare type TestSchema = {
 };
 
 declare type NestedObject = {
-    nestedRequiredField: string;
-    nestedOptionalField?: string | null;
     nestedStringField: string;
     nestedNumberField: number;
     nestedBooleanField: boolean;

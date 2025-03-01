@@ -1,4 +1,4 @@
-import { Schema } from "./Schema";
+import { Schema } from "@/Schema/Schema";
 
 export class UnknownSchema extends Schema<"unknown"> {
     fields: undefined;

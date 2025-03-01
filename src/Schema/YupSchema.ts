@@ -3,7 +3,7 @@ import {
     Schema as yup_Schema,
     ObjectSchema as yup_ObjectSchema,
     ArraySchema as yup_ArraySchema,
-    Lazy as yup_Lazy,
+    LazySchema as yup_LazySchema,
     Reference as yup_Reference,
     ValidationError as yup_ValidationError,
 } from "yup";
@@ -74,7 +74,7 @@ export class YupSchema<T extends SchemaType = SchemaType> extends Schema<T> {
             return new YupSchema("array", schema, fields);
         }
 
-        if (YupSchema.isLazy(schema)) {
+        if (YupSchema.isLazySchema(schema)) {
             // based on my experiments, you don't actually need a value to resolve a lazy schema
             schema = schema.resolve({ value: undefined });
             return YupSchema.create(schema);
@@ -105,7 +105,7 @@ export class YupSchema<T extends SchemaType = SchemaType> extends Schema<T> {
         return "type" in schema && schema.type === "array";
     }
 
-    private static isLazy(schema: yup_ReferenceOrSchema): schema is yup_Lazy<any> {
+    private static isLazySchema(schema: yup_ReferenceOrSchema): schema is yup_LazySchema<any> {
         return "type" in schema && schema.type === "lazy";
     }
 
