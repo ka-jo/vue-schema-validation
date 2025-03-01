@@ -1,6 +1,5 @@
+import { YupSchema, type SchemaValidationError } from "@/Schema";
 import { ValidationOptions } from "@/Types/ValidationOptions";
-import { SchemaValidationError } from "./SchemaValidationError";
-import { YupSchema } from "./YupSchema";
 
 const UNSUPPORTED_SCHEMA_TYPE_MESSAGE =
     "Received unsupported schema type when determining which schema implementation to use";

@@ -10,11 +10,11 @@ import { anything, instance, mock, when } from "ts-mockito";
 
 import { Schema } from "@/Schema/Schema";
 import { YupSchema } from "@/Schema/YupSchema";
+import { SchemaValidationError } from "@/Schema/SchemaValidationError";
+import { UnknownSchema } from "@/Schema/UnknownSchema";
 
 import { VALID_TEST_OBJECT } from "tests/fixtures/valid-data";
 import { INVALID_TEST_OBJECT } from "tests/fixtures/invalid-data";
-import { SchemaValidationError } from "@/Schema/SchemaValidationError";
-import { UnknownSchema } from "@/Schema/UnknownSchema";
 
 describe("YupSchema", () => {
     // The test cases for the static create method will cover initialization of this property

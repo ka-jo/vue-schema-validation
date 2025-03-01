@@ -9,9 +9,14 @@ import {
 } from "yup";
 
 import { ValidationOptions } from "@/Types/ValidationOptions";
-import { Schema, SchemaFields, SchemaType, SchemaValue } from "./Schema";
-import { UnknownSchema } from "./UnknownSchema";
-import { SchemaValidationError } from "./SchemaValidationError";
+import {
+    Schema,
+    SchemaFields,
+    SchemaType,
+    SchemaValue,
+    UnknownSchema,
+    SchemaValidationError,
+} from "@/Schema";
 
 const UNSUPPORTED_SCHEMA_TYPE_MESSAGE = "Received unsupported schema type when creating YupSchema";
 
