@@ -1,17 +1,15 @@
 import { expect } from "vitest";
 import { anything, instance, mock, verify, when } from "ts-mockito";
 
-import { ObjectValidationHandler } from "@/ValidationHandler/ObjectValidationHandler";
-import { ValidationHandler } from "@/ValidationHandler/ValidationHandler";
-import { Schema } from "@/Schema/Schema";
-import { SchemaValidationError } from "@/Schema/SchemaValidationError";
+import { ValidationHandler, ObjectValidationHandler } from "@/ValidationHandler";
+import { Schema, SchemaValidationError } from "@/Schema";
 
 import { VALID_TEST_OBJECT, VALID_NESTED_OBJECT } from "tests/fixtures/valid-data";
 import { DEFAULT_TEST_OBJECT } from "tests/fixtures/default-data";
 import { INVALID_TEST_OBJECT } from "tests/fixtures/invalid-data";
 
 describe("ObjectValidationHandler", () => {
-    let schemaMock: Schema<TestSchema>;
+    let schemaMock: Schema<"object">;
 
     beforeEach(() => {
         schemaMock = mock(Schema);
@@ -38,10 +36,10 @@ describe("ObjectValidationHandler", () => {
 
         it("should be an object containing all schema fields", () => {
             when(schemaMock.fields).thenReturn({
-                stringField: {} as Schema<string>,
-                numberField: {} as Schema<number>,
-                booleanField: {} as Schema<boolean>,
-                objectField: {} as Schema<NestedObject>,
+                stringField: {} as Schema<"primitive">,
+                numberField: {} as Schema<"primitive">,
+                booleanField: {} as Schema<"primitive">,
+                objectField: {} as Schema<"object">,
             });
 
             const handler = new ObjectValidationHandler(instance(schemaMock), {});
@@ -103,10 +101,10 @@ describe("ObjectValidationHandler", () => {
 
         it("should be an object containing all schema fields", () => {
             when(schemaMock.fields).thenReturn({
-                stringField: {} as Schema<string>,
-                numberField: {} as Schema<number>,
-                booleanField: {} as Schema<boolean>,
-                objectField: {} as Schema<NestedObject>,
+                stringField: {} as Schema,
+                numberField: {} as Schema,
+                booleanField: {} as Schema,
+                objectField: {} as Schema,
             });
 
             const handler = new ObjectValidationHandler(instance(schemaMock), {});
@@ -131,10 +129,10 @@ describe("ObjectValidationHandler", () => {
             );
 
             when(schemaMock.fields).thenReturn({
-                stringField: {} as Schema<string>,
-                numberField: {} as Schema<number>,
-                booleanField: {} as Schema<boolean>,
-                objectField: {} as Schema<NestedObject>,
+                stringField: {} as Schema,
+                numberField: {} as Schema,
+                booleanField: {} as Schema,
+                objectField: {} as Schema,
             });
 
             const handler = new ObjectValidationHandler(instance(schemaMock), {});
@@ -187,10 +185,10 @@ describe("ObjectValidationHandler", () => {
     describe("fields property", () => {
         it("should be an object containing all schema fields", () => {
             when(schemaMock.fields).thenReturn({
-                stringField: {} as Schema<string>,
-                numberField: {} as Schema<number>,
-                booleanField: {} as Schema<boolean>,
-                objectField: {} as Schema<NestedObject>,
+                stringField: {} as Schema,
+                numberField: {} as Schema,
+                booleanField: {} as Schema,
+                objectField: {} as Schema,
             });
 
             const handler = new ObjectValidationHandler(instance(schemaMock), {});
@@ -218,10 +216,10 @@ describe("ObjectValidationHandler", () => {
         // the child ValidationHandlers because that would mean mocking an internal of the test subject.
         // Maybe in the future, the ObjectValidationHandler constructor could take a record of ValidationHandlers
         // instead of building it itself?
-        let stringFieldSchemaMock: Schema<string>;
-        let numberFieldSchemaMock: Schema<number>;
-        let booleanFieldSchemaMock: Schema<boolean>;
-        let objectFieldSchemaMock: Schema<NestedObject>;
+        let stringFieldSchemaMock: Schema;
+        let numberFieldSchemaMock: Schema;
+        let booleanFieldSchemaMock: Schema;
+        let objectFieldSchemaMock: Schema;
 
         beforeEach(() => {
             stringFieldSchemaMock = mock(Schema);
@@ -474,6 +472,21 @@ describe("ObjectValidationHandler", () => {
                 numberField: expect.toBeIterable([]),
                 booleanField: expect.toBeIterable([]),
                 objectField: expect.toBeIterable([]),
+            });
+        });
+    });
+
+    describe("static create method", () => {
+        describe("given initial value", () => {
+            it("should throw a TypeError if ");
+
+            it("should return an instance of ObjectValidationHandler with initial value", () => {
+                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                    value: VALID_TEST_OBJECT,
+                });
+
+                expect(handler).toBeInstanceOf(ObjectValidationHandler);
+                expect(handler.value.value).toEqual(VALID_TEST_OBJECT);
             });
         });
     });
