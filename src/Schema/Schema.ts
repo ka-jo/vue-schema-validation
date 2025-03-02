@@ -19,27 +19,30 @@ export abstract class Schema<T extends SchemaType = SchemaType> {
     abstract validate(value: SchemaValue<T>, options: ValidationOptions): boolean;
 
     /**
+     * The type of the schema. This is used to determine which ValidationHandler implementation to use.
+     */
+    readonly type: SchemaType;
+
+    /**
      * The Schema instance to use when validating child fields of a schema.
      * @remarks
      * For object schemas, this will be an object with the same keys as the schema where each value is a {@link Schema}.
      * For array schemas, this will be a {@link Schema} instance.
      * For non-object schemas, this will be undefined
      */
-    abstract readonly fields: SchemaFields<T>;
+    readonly fields: SchemaFields<T>;
 
     /**
      * Default value for the schema
+     * @remarks
+     * This value will be uses when initializing validation if no {@link ValidationOptions.value | value is provided}
      */
-    abstract readonly defaultValue?: Partial<T>;
+    readonly defaultValue?: SchemaDefaultValue<T>;
 
-    /**
-     * The type of the schema. This is used to determine which ValidationHandler implementation to use.
-
-     */
-    readonly type: SchemaType;
-
-    protected constructor(type: SchemaType) {
+    protected constructor(type: T, fields: SchemaFields<T>, defaultValue: SchemaDefaultValue<T>) {
         this.type = type;
+        this.fields = fields;
+        this.defaultValue = defaultValue;
     }
 
     /**
@@ -81,6 +84,15 @@ export type SchemaValue<T extends SchemaType> = T extends "object"
     ? Array<unknown>
     : T extends "unknown"
     ? undefined
+    : unknown;
+
+/**
+ * @internal
+ */
+export type SchemaDefaultValue<T extends SchemaType> = T extends "object"
+    ? Record<string, unknown>
+    : T extends "array"
+    ? Array<unknown>
     : unknown;
 
 /**

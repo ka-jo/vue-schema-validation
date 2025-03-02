@@ -1,11 +1,8 @@
 import { Schema } from "@/Schema";
 
 export class UnknownSchema extends Schema<"unknown"> {
-    fields: undefined;
-    defaultValue: undefined;
-
     constructor() {
-        super("unknown");
+        super("unknown", undefined, undefined);
     }
 
     validate() {

@@ -27,14 +27,9 @@ const UNSUPPORTED_SCHEMA_TYPE_MESSAGE = "Received unsupported schema type when c
 export class YupSchema<T extends SchemaType = SchemaType> extends Schema<T> {
     private schema: yup_Schema;
 
-    defaultValue?: Partial<T>;
-    fields: SchemaFields<T>;
-
     private constructor(type: T, schema: yup_Schema, fields: SchemaFields<T>) {
-        super(type);
+        super(type, fields, schema.spec.default);
         this.schema = schema;
-        this.defaultValue = schema.spec.default;
-        this.fields = fields;
     }
 
     validate(value: SchemaValue<T>, options: ValidationOptions): boolean {
