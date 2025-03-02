@@ -2,6 +2,7 @@ import { Ref } from "vue";
 
 import { Schema } from "@/Schema";
 import { ValidationOptions } from "@/Types/ValidationOptions";
+import { Validation } from "@/Types/Validation";
 import {
     ArrayValidationHandler,
     ObjectValidationHandler,
@@ -89,6 +90,13 @@ export abstract class ValidationHandler<T = unknown> {
      * @param value - Optional value to set the {@link ValidationHandler.value} to
      */
     abstract reset(value?: T): void;
+
+    /**
+     * Converts the ValidationHandler to a reactive object
+     * @remarks
+     * This is the end product of the initialization process and what is intended to be used by the consumer.
+     */
+    abstract toReactive(): Validation<T>;
 
     constructor(schema: Schema, options: ValidationHandlerOptions<T>) {
         this.schema = schema;

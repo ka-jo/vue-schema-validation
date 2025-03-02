@@ -3,6 +3,7 @@ import { ref, Ref } from "vue";
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import { ReadonlyRef } from "@/Types/util";
 import { Schema } from "@/Schema";
+import { BaseValidation } from "@/Types/Validation";
 
 /**
  * ValidationHandler implementation for schemas representing a single value.
@@ -32,6 +33,10 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     }
 
     reset(value?: unknown): void {
+        throw new Error("Method not implemented.");
+    }
+
+    toReactive(): BaseValidation<unknown> {
         throw new Error("Method not implemented.");
     }
 

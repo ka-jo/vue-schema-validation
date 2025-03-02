@@ -1,6 +1,6 @@
 import { ref, type Ref } from "vue";
 
-import { ValidationOptions } from "@/Types/ValidationOptions";
+import { ArrayValidation } from "@/Types/Validation";
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import { Schema } from "@/Schema/Schema";
 
@@ -24,6 +24,10 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     }
 
     reset(value?: unknown): void {
+        throw new Error("Method not implemented.");
+    }
+
+    toReactive(): ArrayValidation<Array<unknown>> {
         throw new Error("Method not implemented.");
     }
 

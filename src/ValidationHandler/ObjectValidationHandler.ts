@@ -1,8 +1,9 @@
-import { ref, Ref } from "vue";
+import { reactive, ref, Ref } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import type { ReadonlyRef } from "@/Types/util";
 import type { Schema } from "@/Schema";
+import { ObjectValidation } from "@/Types/Validation";
 
 /**
  * Validation handler implementation for object schemas
@@ -41,6 +42,10 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
         throw new Error("Method not implemented.");
     }
 
+    toReactive(): ObjectValidation<object> {
+        throw new Error("Method not implemented.");
+    }
+
     public static create(
         schema: Schema<"object">,
         options: ValidationHandlerOptions
@@ -52,7 +57,8 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
         const fields: Record<string, ValidationHandler> = {};
         const value: Record<string, ReadonlyRef> = {};
         const errors: Record<string, ReadonlyRef<Iterable<string>>> = {};
-
+        // We've already walked through all fields when creating the schema, so this isn't as efficient as it could be
+        // I wonder if there's a way to initialize the schema fields and validation handler fields at the same time 🤔
         for (const fieldName of Object.keys(schema.fields)) {
             fields[fieldName] = ValidationHandler.create(schema.fields[fieldName], options);
             value[fieldName] = fields[fieldName].value;
