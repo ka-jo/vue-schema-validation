@@ -4,7 +4,10 @@ import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler
 import type { Schema } from "@/Schema";
 import type { ReadonlyRef } from "@/Types/util";
 import type { SchemaValidation } from "@/Types/SchemaValidation";
-import type { ObjectSchemaValidation } from "@/Types/ObjectSchemaValidation";
+import type {
+    ObjectSchemaValidation,
+    ObjectSchemaValidationErrors,
+} from "@/Types/ObjectSchemaValidation";
 
 /**
  * Validation handler implementation for object schemas
@@ -15,7 +18,7 @@ import type { ObjectSchemaValidation } from "@/Types/ObjectSchemaValidation";
  */
 export class ObjectValidationHandler extends ValidationHandler<object> {
     readonly value: Ref<object>;
-    readonly errors: ReadonlyRef<ObjectValidationHandlerErrors>;
+    readonly errors: ReadonlyRef<ObjectSchemaValidationErrors>;
     readonly isValid: ReadonlyRef<boolean>;
     readonly fields: Record<string, SchemaValidation>;
 

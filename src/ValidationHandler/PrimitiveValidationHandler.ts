@@ -13,7 +13,7 @@ import { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
  */
 export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     readonly value: Ref<unknown>;
-    readonly errors: ReadonlyRef<Iterable<string>>;
+    readonly errors: ReadonlyRef<ReadonlyArray<string>>;
     readonly isValid: ReadonlyRef<boolean>;
     /**
      * Even though fields is not used in this class, it is required to be defined by the base class

@@ -12,4 +12,6 @@ import { ISchemaValidation } from "@/Types/SchemaValidation";
  * rest of the codebase when it comes to file structure and inheritance.
  * @public
  */
-export interface PrimitiveSchemaValidation<T = unknown> extends ISchemaValidation<T> {}
+export interface PrimitiveSchemaValidation<T = unknown> extends ISchemaValidation<T> {
+    errors: ReadonlyArray<string>;
+}
