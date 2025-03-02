@@ -1,20 +1,20 @@
 import { reactive, ref, Ref } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
-import { ReadonlyRef } from "@/Types/util";
-import { Schema } from "@/Schema";
 import { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
+import { Schema, SchemaValidationError } from "@/Schema";
+import { HandlerInstance } from "@/common";
 
 /**
- * ValidationHandler implementation for schemas representing a single value.
+ * {@link ValidationHandler} implementation for schemas representing a single value.
  * @remarks
  * Despite the name, this class is not limited to primitive types. It can be used for any schema that represents
  * a single value, but may not be "primitive" in the traditional sense (e.g. Date)
  */
 export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     readonly value: Ref<unknown>;
-    readonly errors: ReadonlyRef<ReadonlyArray<string>>;
-    readonly isValid: ReadonlyRef<boolean>;
+    readonly errors: Ref<ReadonlyArray<string>>;
+    readonly isValid: Ref<boolean>;
     /**
      * Even though fields is not used in this class, it is required to be defined by the base class
      */
@@ -29,16 +29,32 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     }
 
     validate(): boolean {
-        throw new Error("Method not implemented.");
+        try {
+            this.schema.validate(this.value.value, this.options);
+            this.errors.value = [];
+            this.isValid.value = true;
+        } catch (e) {
+            this.isValid.value = false;
+            if (e instanceof SchemaValidationError) {
+                this.errors.value = e.errors;
+            } else {
+                // If it isn't a SchemaValidationError, we don't know what it is, so we shouldn't populate the errors with it
+                this.errors.value = [];
+            }
+        }
+        return this.isValid.value;
     }
 
     reset(value?: unknown): void {
-        throw new Error("Method not implemented.");
+        this.value.value = value ?? this.options.value ?? this.schema.defaultValue ?? null;
+        this.errors.value = [];
+        this.isValid.value = false;
     }
 
     toReactive(): PrimitiveSchemaValidation<unknown> {
         // for some reason, trying to create this object inline with the call to reactive will throw TypeScript compiler errors
         const facade = {
+            [HandlerInstance]: this,
             value: this.value,
             errors: this.errors,
             isValid: this.isValid,
