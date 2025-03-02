@@ -1,6 +1,8 @@
+import { HandlerInstance } from "@/common";
 import { ArraySchemaValidation } from "@/Types/ArraySchemaValidation";
 import { ObjectSchemaValidation } from "@/Types/ObjectSchemaValidation";
 import { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
+import { ValidationHandler } from "@/ValidationHandler";
 
 /**
  * @privateRemarks
@@ -28,9 +30,15 @@ export type SchemaValidation<T = unknown> = T extends Array<any>
  * @public
  */
 export interface ISchemaValidation<T> {
+    /**
+     * A reference to the {@link ValidationHandler} instance that is managing the validation
+     * @internal
+     */
+    readonly [HandlerInstance]: ValidationHandler<T>;
+
     value: T;
-    errors: Iterable<string>;
-    isValid: boolean;
+    readonly errors: Iterable<string>;
+    readonly isValid: boolean;
 
     validate(): boolean;
     reset(value?: T): void;
