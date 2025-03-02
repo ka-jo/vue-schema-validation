@@ -9,7 +9,7 @@ import { DEFAULT_STRING } from "tests/fixtures/default-data";
 import { INVALID_STRING } from "tests/fixtures/invalid-data";
 
 describe("PrimitiveValidationHandler", () => {
-    let schemaMock: Schema<string>;
+    let schemaMock: Schema<"primitive">;
 
     beforeEach(() => {
         schemaMock = mock(Schema);

@@ -81,5 +81,3 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
         return new ObjectValidationHandler(schema, options, value, errors, fields);
     }
 }
-
-type ObjectValidationHandlerErrors = Iterable<string> & Record<string, Iterable<string>>;

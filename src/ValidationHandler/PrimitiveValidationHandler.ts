@@ -68,6 +68,6 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
         schema: Schema<"primitive">,
         options: ValidationHandlerOptions
     ): PrimitiveValidationHandler {
-        throw new Error("Method not implemented.");
+        return new PrimitiveValidationHandler(schema, options);
     }
 }
