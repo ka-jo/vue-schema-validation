@@ -8,13 +8,10 @@ import {
 } from "yup";
 import { anything, instance, mock, when } from "ts-mockito";
 
-import { Schema } from "@/Schema/Schema";
-import { YupSchema } from "@/Schema/YupSchema";
-import { SchemaValidationError } from "@/Schema/SchemaValidationError";
-import { UnknownSchema } from "@/Schema/UnknownSchema";
+import { Schema, YupSchema, UnknownSchema, SchemaValidationError } from "@/Schema";
 
-import { VALID_TEST_OBJECT } from "tests/fixtures/valid-data";
-import { INVALID_TEST_OBJECT } from "tests/fixtures/invalid-data";
+import { VALID_STRING, VALID_TEST_OBJECT } from "tests/fixtures/valid-data";
+import { INVALID_STRING, INVALID_TEST_OBJECT } from "tests/fixtures/invalid-data";
 
 describe("YupSchema", () => {
     // The test cases for the static create method will cover initialization of this property
@@ -77,17 +74,22 @@ describe("YupSchema", () => {
     describe("validate method", () => {
         let yupMock: yup_Schema<TestSchema>;
 
+        beforeEach(() => {
+            yupMock = mock(yup_Schema);
+            when(yupMock.type).thenReturn("string");
+            when(yupMock.__isYupSchema__).thenReturn(true);
+            when(yupMock.spec).thenReturn({ default: undefined } as any);
+        });
+
         describe("given valid data", () => {
             beforeEach(() => {
-                yupMock = mock(yup_Schema);
-                when(yupMock.type).thenReturn("object");
-                when(yupMock.validateSync(VALID_TEST_OBJECT, anything())).thenReturn();
+                when(yupMock.validateSync(VALID_STRING, anything())).thenReturn();
             });
 
             it("should return true", () => {
                 const schema = YupSchema.create(instance(yupMock));
 
-                const result = schema.validate(VALID_TEST_OBJECT, {});
+                const result = schema.validate(VALID_STRING, {});
 
                 expect(result).toBe(true);
             });
@@ -95,9 +97,7 @@ describe("YupSchema", () => {
 
         describe("when given invalid data", () => {
             beforeEach(() => {
-                yupMock = mock(yup_Schema);
-                when(yupMock.type).thenReturn("object");
-                when(yupMock.validateSync(INVALID_TEST_OBJECT, anything())).thenThrow(
+                when(yupMock.validateSync(INVALID_STRING, anything())).thenThrow(
                     new yup_ValidationError("invalid data")
                 );
             });
@@ -105,39 +105,58 @@ describe("YupSchema", () => {
             it("should throw a SchemaValidationError", () => {
                 const schema = YupSchema.create(instance(yupMock));
 
-                expect(() => schema.validate(INVALID_TEST_OBJECT, {})).toThrow(
-                    SchemaValidationError
-                );
+                expect(() => schema.validate(INVALID_STRING, {})).toThrow(SchemaValidationError);
             });
         });
     });
 
     describe("static create method", () => {
+        let yupStringMock: yup_Schema;
+
+        beforeEach(() => {
+            yupStringMock = mock(yup_Schema);
+            when(yupStringMock.type).thenReturn("string");
+            when(yupStringMock.__isYupSchema__).thenReturn(true);
+            when(yupStringMock.spec).thenReturn({ default: undefined } as any);
+        });
+
+        describe("given a non-object, non-array, non-lazy schema", () => {
+            it("should return a Schema instance with type 'primitive'", () => {
+                const schema = YupSchema.create(instance(yupStringMock));
+
+                expect(schema.type).toBe("primitive");
+            });
+
+            it("should return a Schema instance with undefined fields", () => {
+                const schema = YupSchema.create(instance(yupStringMock));
+
+                expect(schema.fields).toBeUndefined();
+            });
+        });
+
         describe("given an object schema", () => {
-            let yupMock: yup_ObjectSchema<TestSchema>;
-            let yupNestedMock: yup_Schema;
+            let yupObjectMock: yup_ObjectSchema<TestSchema>;
 
             beforeEach(() => {
-                yupMock = mock(yup_ObjectSchema);
-                yupNestedMock = mock(yup_Schema);
-                when(yupMock.type).thenReturn("object");
-                when(yupNestedMock.type).thenReturn("string");
-                when(yupMock.fields).thenReturn({
-                    stringField: instance(yupNestedMock),
-                    numberField: instance(yupNestedMock),
-                    booleanField: instance(yupNestedMock),
-                    objectField: instance(yupNestedMock),
+                yupObjectMock = mock(yup_ObjectSchema);
+                when(yupObjectMock.type).thenReturn("object");
+                when(yupObjectMock.spec).thenReturn({ default: undefined } as any);
+                when(yupObjectMock.fields).thenReturn({
+                    stringField: instance(yupStringMock),
+                    numberField: instance(yupStringMock),
+                    booleanField: instance(yupStringMock),
+                    objectField: instance(yupStringMock),
                 });
             });
 
             it("should return a Schema instance with type 'object'", () => {
-                const schema = YupSchema.create(instance(yupMock));
+                const schema = YupSchema.create(instance(yupObjectMock));
 
                 expect(schema.type).toBe("object");
             });
 
             it("should return a Schema instance with fields populated with Schema instances", () => {
-                const schema = YupSchema.create(instance(yupMock));
+                const schema = YupSchema.create(instance(yupObjectMock));
 
                 expect(schema.fields).toMatchObject({
                     stringField: expect.any(Schema),
@@ -149,71 +168,45 @@ describe("YupSchema", () => {
         });
 
         describe("given an array schema", () => {
-            let yupMock: yup_ArraySchema<any, any>;
-            let yupNestedMock: yup_Schema;
+            let yupArrayMock: yup_ArraySchema<any, any>;
 
             beforeEach(() => {
-                yupMock = mock(yup_ArraySchema);
-                yupNestedMock = mock(yup_Schema);
-                when(yupMock.type).thenReturn("array");
-                when(yupNestedMock.type).thenReturn("string");
-                when(yupMock.innerType).thenReturn(instance(yupNestedMock));
+                yupArrayMock = mock(yup_ArraySchema);
+                when(yupArrayMock.innerType).thenReturn(instance(yupStringMock));
+                when(yupArrayMock.type).thenReturn("array");
+                when(yupArrayMock.spec).thenReturn({ default: undefined } as any);
             });
 
             it("should return a Schema instance with type 'array'", () => {
-                const schema = YupSchema.create(instance(yupMock));
+                const schema = YupSchema.create(instance(yupArrayMock));
 
                 expect(schema.type).toBe("array");
             });
 
             it("should return a Schema instance with fields populated with Schema instance", () => {
-                const schema = YupSchema.create(instance(yupMock));
+                const schema = YupSchema.create(instance(yupArrayMock));
 
-                expect(schema.fields).toBe(expect.any(Schema));
+                expect(schema.fields).toBeInstanceOf(Schema);
             });
         });
 
         describe("given a lazy schema", () => {
-            let yupMock: yup_LazySchema<string>;
-            let yupNestedMock: yup_Schema;
+            let yupLazyMock: yup_LazySchema<string>;
 
             beforeEach(() => {
-                yupMock = mock(yup_LazySchema);
-                yupNestedMock = mock(yup_Schema);
-                when(yupMock.type).thenReturn("lazy");
-                when(yupNestedMock.type).thenReturn("string");
-                when(yupMock.resolve(anything())).thenReturn(instance(yupNestedMock));
+                yupLazyMock = mock(yup_LazySchema);
+                when(yupLazyMock.type).thenReturn("lazy");
+                when(yupLazyMock.resolve(anything())).thenReturn(instance(yupStringMock));
             });
 
             it("should return a Schema instance with the resolved schema", () => {
-                const schema = YupSchema.create(instance(yupMock));
+                const schema = YupSchema.create(instance(yupLazyMock));
 
                 expect(schema.type).toBe("primitive");
             });
         });
 
-        describe("given a non-object, non-array, non-lazy schema", () => {
-            let yupMock: yup_Schema;
-
-            beforeEach(() => {
-                yupMock = mock(yup_Schema);
-                when(yupMock.type).thenReturn("string");
-            });
-
-            it("should return a Schema instance with type 'primitive'", () => {
-                const schema = YupSchema.create(instance(yupMock));
-
-                expect(schema.type).toBe("primitive");
-            });
-
-            it("should return a Schema instance with undefined fields", () => {
-                const schema = YupSchema.create(instance(yupMock));
-
-                expect(schema.fields).toBeUndefined();
-            });
-        });
-
-        describe("should return an UnknownSchema given a reference", () => {
+        it("should return an UnknownSchema given a reference", () => {
             const yupMock = mock(yup_Reference);
             when(yupMock.__isYupRef).thenReturn(true);
             const schema = YupSchema.create(instance(yupMock));
