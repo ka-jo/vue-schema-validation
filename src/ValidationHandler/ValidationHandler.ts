@@ -2,7 +2,7 @@ import { Ref } from "vue";
 
 import { Schema } from "@/Schema";
 import { ValidationOptions } from "@/Types/ValidationOptions";
-import { Validation } from "@/Types/Validation";
+import { SchemaValidation } from "@/Types/SchemaValidation";
 import {
     ArrayValidationHandler,
     ObjectValidationHandler,
@@ -96,7 +96,7 @@ export abstract class ValidationHandler<T = unknown> {
      * @remarks
      * This is the end product of the initialization process and what is intended to be used by the consumer.
      */
-    abstract toReactive(): Validation<T>;
+    abstract toReactive(): SchemaValidation<T>;
 
     constructor(schema: Schema, options: ValidationHandlerOptions<T>) {
         this.schema = schema;
@@ -128,9 +128,9 @@ export abstract class ValidationHandler<T = unknown> {
 export type ValidationHandlerFields<T> = T extends unknown
     ? unknown
     : T extends Array<any>
-    ? Record<number, Validation>
+    ? Record<number, SchemaValidation>
     : T extends object
-    ? Record<string, Validation>
+    ? Record<string, SchemaValidation>
     : undefined;
 
 /**

@@ -1,14 +1,16 @@
 import { ref, type Ref } from "vue";
 
-import { Validation, ArrayValidation } from "@/Types/Validation";
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
-import { Schema } from "@/Schema/Schema";
+import type { ReadonlyRef } from "@/Types/util";
+import type { Schema } from "@/Schema/Schema";
+import type { SchemaValidation } from "@/Types/SchemaValidation";
+import type { ArraySchemaValidation } from "@/Types/ArraySchemaValidation";
 
 export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     readonly value: Ref<Array<unknown>>;
-    readonly errors: Ref<Iterable<string>>;
-    readonly isValid: Ref<boolean, boolean>;
-    readonly fields: Record<number, Validation>;
+    readonly errors: ReadonlyRef<Iterable<string>>;
+    readonly isValid: ReadonlyRef<boolean>;
+    readonly fields: Record<number, SchemaValidation>;
 
     constructor(schema: Schema<"array">, options: ValidationHandlerOptions<Array<unknown>>) {
         super(schema, options);
@@ -27,7 +29,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
         throw new Error("Method not implemented.");
     }
 
-    toReactive(): ArrayValidation<Array<unknown>> {
+    toReactive(): ArraySchemaValidation<Array<unknown>> {
         throw new Error("Method not implemented.");
     }
 

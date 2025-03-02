@@ -1,9 +1,10 @@
 import { reactive, ref, Ref } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
-import type { ReadonlyRef } from "@/Types/util";
 import type { Schema } from "@/Schema";
-import { ObjectValidation, Validation } from "@/Types/Validation";
+import type { ReadonlyRef } from "@/Types/util";
+import type { SchemaValidation } from "@/Types/SchemaValidation";
+import type { ObjectSchemaValidation } from "@/Types/ObjectSchemaValidation";
 
 /**
  * Validation handler implementation for object schemas
@@ -16,14 +17,14 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
     readonly value: Ref<object>;
     readonly errors: ReadonlyRef<ObjectValidationHandlerErrors>;
     readonly isValid: ReadonlyRef<boolean>;
-    readonly fields: Record<string, Validation>;
+    readonly fields: Record<string, SchemaValidation>;
 
     constructor(
         schema: Schema<"object">,
         options: ValidationHandlerOptions<object>,
         value: Record<string, ReadonlyRef>,
         errors: Record<string, ReadonlyRef<Iterable<string>>>,
-        fields: Record<string, Validation>
+        fields: Record<string, SchemaValidation>
     ) {
         super(schema, options);
 
@@ -42,8 +43,16 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
         throw new Error("Method not implemented.");
     }
 
-    toReactive(): ObjectValidation<object> {
-        throw new Error("Method not implemented.");
+    toReactive(): ObjectSchemaValidation<object> {
+        const facade = {
+            value: this.value,
+            errors: this.errors,
+            isValid: this.isValid,
+            fields: this.fields,
+            validate: this.validate.bind(this),
+            reset: this.reset.bind(this),
+        };
+        return reactive(facade);
     }
 
     public static create(
@@ -54,7 +63,7 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
             throw new TypeError("Received initial value that is not an object for object schema");
         }
 
-        const fields: Record<string, Validation> = {};
+        const fields: Record<string, SchemaValidation> = {};
         const value: Record<string, ReadonlyRef> = {};
         const errors: Record<string, ReadonlyRef<Iterable<string>>> = {};
         // We've already walked through all fields when creating the schema, so this isn't as efficient as it could be
@@ -70,5 +79,4 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
     }
 }
 
-type ObjectValidationHandlerErrors = Iterable<string> &
-    Record<string, ReadonlyRef<Iterable<string>>>;
+type ObjectValidationHandlerErrors = Iterable<string> & Record<string, Iterable<string>>;

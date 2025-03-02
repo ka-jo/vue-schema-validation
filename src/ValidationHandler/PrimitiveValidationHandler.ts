@@ -1,9 +1,9 @@
-import { ref, Ref } from "vue";
+import { reactive, ref, Ref } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import { ReadonlyRef } from "@/Types/util";
 import { Schema } from "@/Schema";
-import { BaseValidation } from "@/Types/Validation";
+import { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
 
 /**
  * ValidationHandler implementation for schemas representing a single value.
@@ -36,8 +36,16 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
         throw new Error("Method not implemented.");
     }
 
-    toReactive(): BaseValidation<unknown> {
-        throw new Error("Method not implemented.");
+    toReactive(): PrimitiveSchemaValidation<unknown> {
+        // for some reason, trying to create this object inline with the call to reactive will throw TypeScript compiler errors
+        const facade = {
+            value: this.value,
+            errors: this.errors,
+            isValid: this.isValid,
+            validate: this.validate.bind(this),
+            reset: this.reset.bind(this),
+        };
+        return reactive(facade);
     }
 
     public static create(
