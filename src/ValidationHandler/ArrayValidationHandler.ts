@@ -1,7 +1,7 @@
 import { ref, type Ref } from "vue";
 
 import { ValidationOptions } from "@/Types/ValidationOptions";
-import { ValidationHandler } from "@/ValidationHandler";
+import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import { Schema } from "@/Schema/Schema";
 
 export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
@@ -10,10 +10,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     readonly isValid: Ref<boolean, boolean>;
     readonly fields: Record<number, ValidationHandler>;
 
-    constructor(
-        schema: Schema<"array">,
-        options: Omit<ValidationOptions<Array<unknown>>, "schema">
-    ) {
+    constructor(schema: Schema<"array">, options: ValidationHandlerOptions<Array<unknown>>) {
         super(schema, options);
 
         this.value = ref([]);
@@ -27,6 +24,16 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     }
 
     reset(value?: unknown): void {
+        throw new Error("Method not implemented.");
+    }
+
+    public static create(
+        schema: Schema<"array">,
+        options: ValidationHandlerOptions
+    ): ArrayValidationHandler {
+        if (options.value && !Array.isArray(options.value)) {
+            throw new TypeError("Received initial value that is not an array for array schema");
+        }
         throw new Error("Method not implemented.");
     }
 }
