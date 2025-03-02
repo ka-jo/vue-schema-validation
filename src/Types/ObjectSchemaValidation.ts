@@ -6,8 +6,8 @@ import { DeepPartial } from "@/Types/util";
  */
 export interface ObjectSchemaValidation<T extends object = Record<string, unknown>>
     extends ISchemaValidation<T> {
-    fields: ObjectSchemaValidationFields<T>;
-    errors: ObjectSchemaValidationErrors<T>;
+    readonly fields: ObjectSchemaValidationFields<T>;
+    readonly errors: ObjectSchemaValidationErrors<T>;
 
     reset(value?: DeepPartial<T>): void;
 }
@@ -16,7 +16,7 @@ export interface ObjectSchemaValidation<T extends object = Record<string, unknow
  * @public
  */
 export type ObjectSchemaValidationFields<T extends object = Record<string, unknown>> = {
-    [K in keyof T]-?: SchemaValidation<T[K]>;
+    readonly [K in keyof T]-?: SchemaValidation<T[K]>;
 };
 
 /**
@@ -24,5 +24,5 @@ export type ObjectSchemaValidationFields<T extends object = Record<string, unkno
  */
 export type ObjectSchemaValidationErrors<T extends object = Record<string, unknown>> =
     Iterable<string> & {
-        [K in keyof T]-?: SchemaValidation<T[K]>["errors"];
+        readonly [K in keyof T]-?: SchemaValidation<T[K]>["errors"];
     };

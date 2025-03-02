@@ -8,8 +8,8 @@ import type { ArraySchemaValidation } from "@/Types/ArraySchemaValidation";
 
 export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     readonly value: Ref<Array<unknown>>;
-    readonly errors: ReadonlyRef<Iterable<string>>;
-    readonly isValid: ReadonlyRef<boolean>;
+    readonly errors: Ref<Iterable<string>>;
+    readonly isValid: Ref<boolean>;
     readonly fields: Record<number, SchemaValidation>;
 
     constructor(schema: Schema<"array">, options: ValidationHandlerOptions<Array<unknown>>) {
