@@ -3,7 +3,7 @@ import { reactive, ref, Ref } from "vue";
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import type { ReadonlyRef } from "@/Types/util";
 import type { Schema } from "@/Schema";
-import { ObjectValidation } from "@/Types/Validation";
+import { ObjectValidation, Validation } from "@/Types/Validation";
 
 /**
  * Validation handler implementation for object schemas
@@ -16,14 +16,14 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
     readonly value: Ref<object>;
     readonly errors: ReadonlyRef<ObjectValidationHandlerErrors>;
     readonly isValid: ReadonlyRef<boolean>;
-    readonly fields: Record<string, ValidationHandler>;
+    readonly fields: Record<string, Validation>;
 
     constructor(
         schema: Schema<"object">,
         options: ValidationHandlerOptions<object>,
         value: Record<string, ReadonlyRef>,
         errors: Record<string, ReadonlyRef<Iterable<string>>>,
-        fields: Record<string, ValidationHandler>
+        fields: Record<string, Validation>
     ) {
         super(schema, options);
 
@@ -54,15 +54,16 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
             throw new TypeError("Received initial value that is not an object for object schema");
         }
 
-        const fields: Record<string, ValidationHandler> = {};
+        const fields: Record<string, Validation> = {};
         const value: Record<string, ReadonlyRef> = {};
         const errors: Record<string, ReadonlyRef<Iterable<string>>> = {};
         // We've already walked through all fields when creating the schema, so this isn't as efficient as it could be
         // I wonder if there's a way to initialize the schema fields and validation handler fields at the same time 🤔
         for (const fieldName of Object.keys(schema.fields)) {
-            fields[fieldName] = ValidationHandler.create(schema.fields[fieldName], options);
-            value[fieldName] = fields[fieldName].value;
-            errors[fieldName] = fields[fieldName].errors;
+            const fieldHandler = ValidationHandler.create(schema.fields[fieldName], options);
+            fields[fieldName] = fieldHandler.toReactive();
+            value[fieldName] = fieldHandler.value;
+            errors[fieldName] = fieldHandler.errors;
         }
 
         return new ObjectValidationHandler(schema, options, value, errors, fields);

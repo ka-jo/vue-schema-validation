@@ -128,9 +128,9 @@ export abstract class ValidationHandler<T = unknown> {
 export type ValidationHandlerFields<T> = T extends unknown
     ? unknown
     : T extends Array<any>
-    ? Record<number, ValidationHandler>
+    ? Record<number, Validation>
     : T extends object
-    ? Record<string, ValidationHandler>
+    ? Record<string, Validation>
     : undefined;
 
 /**

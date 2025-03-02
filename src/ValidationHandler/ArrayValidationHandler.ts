@@ -1,6 +1,6 @@
 import { ref, type Ref } from "vue";
 
-import { ArrayValidation } from "@/Types/Validation";
+import { Validation, ArrayValidation } from "@/Types/Validation";
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import { Schema } from "@/Schema/Schema";
 
@@ -8,7 +8,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     readonly value: Ref<Array<unknown>>;
     readonly errors: Ref<Iterable<string>>;
     readonly isValid: Ref<boolean, boolean>;
-    readonly fields: Record<number, ValidationHandler>;
+    readonly fields: Record<number, Validation>;
 
     constructor(schema: Schema<"array">, options: ValidationHandlerOptions<Array<unknown>>) {
         super(schema, options);
