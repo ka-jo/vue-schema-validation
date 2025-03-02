@@ -1,7 +1,12 @@
 import { Ref } from "vue";
 
-import { Schema } from "@/Schema/Schema";
+import { Schema } from "@/Schema";
 import { ValidationOptions } from "@/Types/ValidationOptions";
+import {
+    ArrayValidationHandler,
+    ObjectValidationHandler,
+    PrimitiveValidationHandler,
+} from "@/ValidationHandler";
 
 /**
  * Base class for managing validation state for a value
@@ -26,7 +31,7 @@ export abstract class ValidationHandler<T = unknown> {
      * The schema property of the options will be a library specific schema (i.e. Yup schema) and should not be interacted with directly.
      * For this reason, the schema property is omitted from typing of options here, even though it may appear on the options object at runtime.
      */
-    protected readonly options: Omit<ValidationOptions<T>, "schema">;
+    protected readonly options: ValidationHandlerOptions<T>;
 
     /**
      * Ref to the value being validated
@@ -50,9 +55,9 @@ export abstract class ValidationHandler<T = unknown> {
     abstract readonly errors: Ref<Iterable<string>>;
 
     /**
-     * Ref for whether the value is valid
+     * Ref that tracks if the value was valid after the last call to validate
      * @remarks
-     * This is only updated after a call to validate. Changing the value will not automatically update isValid
+     * This is only updated after a call to validate. Changing the {@link ValidationHandler.value ValidationHanlder's value} will not automatically update isValid
      */
     abstract readonly isValid: Ref<boolean>;
 
@@ -85,12 +90,25 @@ export abstract class ValidationHandler<T = unknown> {
      */
     abstract reset(value?: T): void;
 
-    constructor(schema: Schema, options: Omit<ValidationOptions<T>, "schema">) {
+    constructor(schema: Schema, options: ValidationHandlerOptions<T>) {
         this.schema = schema;
         this.options = options;
         // Binding to instance so that 'this' is not Vue proxy
         this.validate = this.validate.bind(this);
         this.reset = this.reset.bind(this);
+    }
+
+    public static create(schema: Schema, options: ValidationOptions<unknown>): ValidationHandler {
+        switch (schema.type) {
+            case "array":
+                return ArrayValidationHandler.create(schema, options);
+            case "object":
+                return ObjectValidationHandler.create(schema, options);
+            case "primitive":
+            case "unknown":
+            default:
+                return PrimitiveValidationHandler.create(schema, options);
+        }
     }
 }
 
@@ -99,8 +117,17 @@ export abstract class ValidationHandler<T = unknown> {
  * For non-object types, this will be undefined
  * @internal
  */
-export type ValidationHandlerFields<T> = T extends object
-    ? {
-          [P in keyof T]: ValidationHandler<T[P]>;
-      }
+export type ValidationHandlerFields<T> = T extends unknown
+    ? unknown
+    : T extends Array<any>
+    ? Record<number, ValidationHandler>
+    : T extends object
+    ? Record<string, ValidationHandler>
     : undefined;
+
+/**
+ * Type for the options passed to a ValidationHandler. This is the same as {@link ValidationOptions} but without the schema property.
+ * This is to ensure the ValidationHandler does not interact with library specific schemas directly.
+ * @internal
+ */
+export type ValidationHandlerOptions<T = unknown> = Omit<ValidationOptions<T>, "schema">;

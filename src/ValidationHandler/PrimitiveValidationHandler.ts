@@ -1,10 +1,8 @@
 import { ref, Ref } from "vue";
 
-import { ValidationOptions } from "@/Types/ValidationOptions";
+import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import { ReadonlyRef } from "@/Types/util";
-import { Schema } from "@/Schema/Schema";
-
-import { ValidationHandler } from "./ValidationHandler";
+import { Schema } from "@/Schema";
 
 /**
  * ValidationHandler implementation for schemas representing a single value.
@@ -21,7 +19,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
      */
     readonly fields: undefined;
 
-    constructor(schema: Schema<"primitive">, options: Omit<ValidationOptions<unknown>, "schema">) {
+    constructor(schema: Schema<"primitive">, options: ValidationHandlerOptions) {
         super(schema, options);
 
         this.value = ref(undefined);
@@ -34,6 +32,13 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     }
 
     reset(value?: unknown): void {
+        throw new Error("Method not implemented.");
+    }
+
+    public static create(
+        schema: Schema<"primitive">,
+        options: ValidationHandlerOptions
+    ): PrimitiveValidationHandler {
         throw new Error("Method not implemented.");
     }
 }
