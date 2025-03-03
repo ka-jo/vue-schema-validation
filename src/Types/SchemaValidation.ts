@@ -16,8 +16,8 @@ export type SchemaValidation<T = unknown> = T extends Array<any>
     ? ArraySchemaValidation<T>
     : T extends object
     ? ObjectSchemaValidation<T>
-    : T extends unknown
-    ? ISchemaValidation<T>
+    : unknown extends T
+    ? ISchemaValidation
     : PrimitiveSchemaValidation<T>;
 
 /**
@@ -26,20 +26,25 @@ export type SchemaValidation<T = unknown> = T extends Array<any>
  * This interface was only created to be used when defining the specific validation interfaces
  * (i.e. {@link PrimitiveSchemaValidation}, {@link ObjectSchemaValidation}, and {@link ArraySchemaValidation})
  * You should not use this interface directly, but instead prefer the specific validation interfaces
- * or the {@link Validation} type when you don't already know the specific type of validation
+ * or the {@link SchemaValidation} type when you don't already know the specific type of validation
+ * @privateRemarks
+ * This interface lays out the structure that all type specific validation interfaces must follow.
+ * It should always represent a completely unknown type, so there should never be a need for a
+ * type parameter on this interface.
  * @public
  */
-export interface ISchemaValidation<T> {
+export interface ISchemaValidation {
     /**
      * A reference to the {@link ValidationHandler} instance that is managing the validation
      * @internal
      */
-    readonly [HandlerInstance]: ValidationHandler<T>;
+    readonly [HandlerInstance]: ValidationHandler<unknown>;
 
-    value: T;
+    value: unknown;
     readonly errors: Iterable<string>;
     readonly isValid: boolean;
+    readonly fields: unknown;
 
     validate(): boolean;
-    reset(value?: T): void;
+    reset(value?: unknown): void;
 }

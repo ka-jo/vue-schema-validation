@@ -1,11 +1,18 @@
-import { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
-import { ElementType } from "./util";
+import type { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
+import type { ElementType } from "@/Types/util";
+import type { ValidationHandler } from "@/ValidationHandler";
+import type { HandlerInstance } from "@/common";
 
 /**
  * @public
  */
 export interface ArraySchemaValidation<T extends Array<unknown> = Array<unknown>>
-    extends ISchemaValidation<T> {
+    extends ISchemaValidation {
+    /**
+     * @internal
+     */
+    readonly [HandlerInstance]: ValidationHandler<T>;
+    value: T;
     readonly fields: ArraySchemaValidationFields<T>;
     readonly errors: ArraySchemaValidationErrors<T>;
 
@@ -13,9 +20,6 @@ export interface ArraySchemaValidation<T extends Array<unknown> = Array<unknown>
 }
 
 /**
- * @privateRemarks
- * Because the generic is constrained to an array, this will never resolve to `never`
- * This is how you infer the type of array elements with TypeScript 🤷‍♂️
  * @public
  */
 export type ArraySchemaValidationFields<T extends Array<unknown>> = {

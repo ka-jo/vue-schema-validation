@@ -1,12 +1,21 @@
+import { HandlerInstance } from "@/common";
 import { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
 import { DeepPartial } from "@/Types/util";
+import { ValidationHandler } from "@/ValidationHandler";
 
 /**
  * @public
  */
 export interface ObjectSchemaValidation<T extends object = Record<string, unknown>>
-    extends ISchemaValidation<ObjectSchemaValidationValue<T>> {
-    value: ObjectSchemaValidationValue<T>;
+    extends ISchemaValidation {
+    /**
+     * @internal
+     */
+    readonly [HandlerInstance]: ValidationHandler<T>;
+
+    get value(): ObjectSchemaValidationValue<T>;
+    set value(value: DeepPartial<T>);
+
     readonly fields: ObjectSchemaValidationFields<T>;
     readonly errors: ObjectSchemaValidationErrors<T>;
 
@@ -22,14 +31,14 @@ export interface ObjectSchemaValidation<T extends object = Record<string, unknow
  * @public
  */
 export type ObjectSchemaValidationValue<T extends object = Record<string, unknown>> = {
-    [K in keyof T]-?: SchemaValidation<T[K]>["value"] | null;
+    [K in keyof T]-?: SchemaValidation<NonNullable<T[K]>>["value"];
 };
 
 /**
  * @public
  */
 export type ObjectSchemaValidationFields<T extends object = Record<string, unknown>> = {
-    readonly [K in keyof T]-?: SchemaValidation<T[K]>;
+    readonly [K in keyof T]-?: SchemaValidation<NonNullable<T[K]>>;
 };
 
 /**
@@ -37,5 +46,5 @@ export type ObjectSchemaValidationFields<T extends object = Record<string, unkno
  */
 export type ObjectSchemaValidationErrors<T extends object = Record<string, unknown>> =
     Iterable<string> & {
-        readonly [K in keyof T]-?: SchemaValidation<T[K]>["errors"];
+        readonly [K in keyof T]-?: SchemaValidation<NonNullable<T[K]>>["errors"];
     };

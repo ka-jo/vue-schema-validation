@@ -1,4 +1,6 @@
+import { HandlerInstance } from "@/common";
 import { ISchemaValidation } from "@/Types/SchemaValidation";
+import { ValidationHandler } from "@/ValidationHandler";
 
 /**
  * Represents validation for a single value
@@ -12,6 +14,14 @@ import { ISchemaValidation } from "@/Types/SchemaValidation";
  * rest of the codebase when it comes to file structure and inheritance.
  * @public
  */
-export interface PrimitiveSchemaValidation<T = unknown> extends ISchemaValidation<T> {
+export interface PrimitiveSchemaValidation<T = unknown> extends ISchemaValidation {
+    /**
+     * @internal
+     */
+    readonly [HandlerInstance]: ValidationHandler<T>;
+    get value(): T | null;
+    set value(value: T | null | undefined);
     readonly errors: ReadonlyArray<string>;
+
+    reset(value?: T | null): void;
 }
