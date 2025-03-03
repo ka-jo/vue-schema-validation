@@ -1,4 +1,5 @@
 import { anything, instance, mock, when } from "ts-mockito";
+import { ref } from "vue";
 
 import { PrimitiveValidationHandler } from "@/ValidationHandler/PrimitiveValidationHandler";
 import { Schema } from "@/Schema/Schema";
@@ -7,12 +8,13 @@ import { SchemaValidationError } from "@/Schema/SchemaValidationError";
 import { VALID_STRING } from "tests/fixtures/valid-data";
 import { DEFAULT_STRING } from "tests/fixtures/default-data";
 import { INVALID_STRING } from "tests/fixtures/invalid-data";
+import { HandlerInstance } from "@/common";
 
 describe("PrimitiveValidationHandler", () => {
     let schemaMock: Schema<"primitive">;
 
     beforeEach(() => {
-        schemaMock = mock(Schema);
+        schemaMock = mock<Schema<"primitive">>();
     });
 
     describe("value property", () => {
@@ -68,22 +70,11 @@ describe("PrimitiveValidationHandler", () => {
         // Because we've established it's a ref by this point, test descriptions should read as if it's a regular property
 
         // Enforcing the property is readonly at runtime is not worth the overhead for an internal class.
-        // So we'll ensure the property is typed as readonly and that the Vue ref is readonly.
+        // So we'll ensure the property is typed as readonly
         it("should be readonly", () => {
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
-            const originalErrors = handler.errors.value;
-            const newErrors = {} as any;
-
-            // @ts-expect-error
-            handler.errors.value = newErrors;
-
-            type Errors = Pick<PrimitiveValidationHandler, "errors">;
-
-            expectTypeOf<Errors>().toEqualTypeOf<{
+            expectTypeOf<PrimitiveValidationHandler>().pick("errors").toEqualTypeOf<{
                 readonly errors: PrimitiveValidationHandler["errors"];
             }>();
-
-            expect(handler.errors.value).toBe(originalErrors);
         });
 
         it("should be iterable", () => {
@@ -109,20 +100,9 @@ describe("PrimitiveValidationHandler", () => {
         // Because we've established it's a ref by this point, test descriptions should read as if it's a regular property
 
         it("should be readonly", () => {
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
-            const originalIsValid = handler.isValid.value;
-            const newIsValid = !originalIsValid;
-
-            // @ts-expect-error
-            handler.isValid.value = newIsValid;
-
-            type IsValid = Pick<PrimitiveValidationHandler, "isValid">;
-
-            expectTypeOf<IsValid>().toEqualTypeOf<{
+            expectTypeOf<PrimitiveValidationHandler>().pick("isValid").toEqualTypeOf<{
                 readonly isValid: PrimitiveValidationHandler["isValid"];
             }>();
-
-            expect(handler.isValid.value).toBe(originalIsValid);
         });
 
         it("should initialize to false", () => {
@@ -284,6 +264,85 @@ describe("PrimitiveValidationHandler", () => {
             handler.reset();
 
             expect(handler.errors.value).toBeIterable([]);
+        });
+    });
+
+    describe("toReactive method", () => {
+        describe("return value", () => {
+            it("should be an object", () => {
+                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+
+                const reactive = handler.toReactive();
+
+                expect(reactive).toBeTypeOf("object");
+            });
+
+            it("should be reactive", () => {
+                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+
+                const reactive = handler.toReactive();
+
+                expect(reactive).toBeReactive();
+            });
+
+            it("should have HandlerInstance symbol property", () => {
+                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+
+                const reactive = handler.toReactive();
+
+                expect(reactive[HandlerInstance]).toBeInstanceOf(PrimitiveValidationHandler);
+            });
+
+            it("should have value property", () => {
+                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+
+                const reactive = handler.toReactive();
+
+                expect(reactive).toHaveProperty("value");
+                expect(reactive.value).toEqual(handler.value.value);
+            });
+
+            it("should have readonly errors property", () => {
+                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+
+                const reactive = handler.toReactive();
+
+                expect(reactive).toHaveProperty("errors");
+                expect(reactive.errors).toEqual(handler.errors.value);
+                expect(() => {
+                    //@ts-expect-error
+                    reactive.errors = ["new error"];
+                }).toThrowError();
+            });
+
+            it("should have readonly isValid property", () => {
+                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+
+                const reactive = handler.toReactive();
+
+                expect(reactive).toHaveProperty("isValid");
+                expect(reactive.isValid).toBe(handler.isValid.value);
+                expect(() => {
+                    //@ts-expect-error
+                    reactive.isValid = !handler.isValid.value;
+                }).toThrowError();
+            });
+
+            it("should have validate method", () => {
+                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+
+                const reactive = handler.toReactive();
+
+                expect(reactive.validate).toBeInstanceOf(Function);
+            });
+
+            it("should have reset method", () => {
+                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+
+                const reactive = handler.toReactive();
+
+                expect(reactive.reset).toBeInstanceOf(Function);
+            });
         });
     });
 });

@@ -101,9 +101,6 @@ export abstract class ValidationHandler<T = unknown> {
     constructor(schema: Schema, options: ValidationHandlerOptions<T>) {
         this.schema = schema;
         this.options = options;
-        // Binding to instance so that 'this' is not Vue proxy
-        this.validate = this.validate.bind(this);
-        this.reset = this.reset.bind(this);
     }
 
     public static create(schema: Schema, options: ValidationOptions<unknown>): ValidationHandler {

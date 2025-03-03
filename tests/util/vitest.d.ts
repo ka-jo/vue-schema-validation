@@ -7,6 +7,11 @@ interface CustomMatchers<R = unknown> {
      */
     toBeVueRef: () => R;
     /**
+     * Verify that the received value is a reactive Vue proxy by testing that Vue's isReactive function returns true
+     * when passed the received value.
+     */
+    toBeReactive: () => R;
+    /**
      * Veryify that the received value implements the iterable protocol.
      * @param expected - Optional array of values that should be present in the iterable. Does not verify the order of the values.
      * @remarks

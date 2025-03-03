@@ -13,5 +13,5 @@ import { ISchemaValidation } from "@/Types/SchemaValidation";
  * @public
  */
 export interface PrimitiveSchemaValidation<T = unknown> extends ISchemaValidation<T> {
-    errors: ReadonlyArray<string>;
+    readonly errors: ReadonlyArray<string>;
 }

@@ -1,4 +1,4 @@
-import { reactive, ref, Ref } from "vue";
+import { reactive, ref, readonly, Ref } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
@@ -23,7 +23,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     constructor(schema: Schema<"primitive">, options: ValidationHandlerOptions) {
         super(schema, options);
 
-        this.value = ref(undefined);
+        this.value = ref(this.options.value ?? this.schema.defaultValue ?? null);
         this.errors = ref([]);
         this.isValid = ref(false);
     }
@@ -56,8 +56,8 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
         const facade = {
             [HandlerInstance]: this,
             value: this.value,
-            errors: this.errors,
-            isValid: this.isValid,
+            errors: readonly(this.errors),
+            isValid: readonly(this.isValid),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
         };

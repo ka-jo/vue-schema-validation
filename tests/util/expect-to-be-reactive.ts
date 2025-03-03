@@ -1,8 +1,8 @@
-import { isRef } from "vue";
+import { isReactive } from "vue";
 
 expect.extend({
-    toBeVueRef(received) {
-        if (isRef(received)) {
+    toBeReactive(received) {
+        if (isReactive(received)) {
             return success(received, this.isNot);
         } else {
             return failure(received, this.isNot);
@@ -25,4 +25,4 @@ function success(received: unknown, isNot: boolean) {
 }
 
 const message = (received: unknown, isNot: boolean) =>
-    `expected ${received}${isNot ? " not" : ""} to be Vue ref`;
+    `expected ${received}${isNot ? " not" : ""} to be reactive Vue proxy`;
