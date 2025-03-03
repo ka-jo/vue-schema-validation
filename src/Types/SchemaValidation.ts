@@ -43,7 +43,7 @@ export interface ISchemaValidation {
     value: unknown;
     readonly errors: Iterable<string>;
     readonly isValid: boolean;
-    readonly fields: unknown;
+    readonly fields?: unknown;
 
     validate(): boolean;
     reset(value?: unknown): void;

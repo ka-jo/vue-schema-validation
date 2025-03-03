@@ -1,4 +1,4 @@
-import { reactive, ref, Ref } from "vue";
+import { markRaw, reactive, readonly, ref, Ref } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import type { Schema } from "@/Schema";
@@ -8,6 +8,7 @@ import type {
     ObjectSchemaValidation,
     ObjectSchemaValidationErrors,
 } from "@/Types/ObjectSchemaValidation";
+import { HandlerInstance } from "@/common";
 
 /**
  * Validation handler implementation for object schemas
@@ -18,8 +19,8 @@ import type {
  */
 export class ObjectValidationHandler extends ValidationHandler<object> {
     readonly value: Ref<object>;
-    readonly errors: ReadonlyRef<ObjectSchemaValidationErrors>;
-    readonly isValid: ReadonlyRef<boolean>;
+    readonly errors: Ref<ObjectSchemaValidationErrors>;
+    readonly isValid: Ref<boolean>;
     readonly fields: Record<string, SchemaValidation>;
 
     constructor(
@@ -48,9 +49,10 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
 
     toReactive(): ObjectSchemaValidation<object> {
         const facade = {
+            [HandlerInstance]: markRaw(this),
             value: this.value,
-            errors: this.errors,
-            isValid: this.isValid,
+            errors: readonly(this.errors),
+            isValid: readonly(this.isValid),
             fields: this.fields,
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),

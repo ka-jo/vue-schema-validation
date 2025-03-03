@@ -1,4 +1,4 @@
-import { reactive, ref, readonly, Ref } from "vue";
+import { reactive, ref, readonly, Ref, markRaw } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
@@ -54,7 +54,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     toReactive(): PrimitiveSchemaValidation<unknown> {
         // for some reason, trying to create this object inline with the call to reactive will throw TypeScript compiler errors
         const facade = {
-            [HandlerInstance]: this,
+            [HandlerInstance]: markRaw(this),
             value: this.value,
             errors: readonly(this.errors),
             isValid: readonly(this.isValid),
@@ -63,6 +63,10 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
         };
         return reactive(facade);
     }
+
+    private getValue() {}
+
+    public setValue() {}
 
     public static create(
         schema: Schema<"primitive">,

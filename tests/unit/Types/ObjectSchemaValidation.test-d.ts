@@ -7,7 +7,6 @@ import {
 } from "@/Types/ObjectSchemaValidation";
 import { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
 import { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
-import { DeepPartial } from "@/Types/util";
 import { ValidationHandler } from "@/ValidationHandler";
 
 describe("ObjectSchemaValidation type", () => {

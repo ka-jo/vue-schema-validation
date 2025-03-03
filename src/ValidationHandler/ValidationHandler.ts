@@ -1,4 +1,4 @@
-import { Ref } from "vue";
+import { customRef, Ref } from "vue";
 
 import { Schema } from "@/Schema";
 import { ValidationOptions } from "@/Types/ValidationOptions";
@@ -35,13 +35,43 @@ export abstract class ValidationHandler<T = unknown> {
     protected readonly options: ValidationHandlerOptions<T>;
 
     /**
+     * Notifies Vue's reactivity system that the value has been accessed
+     */
+    protected _trackValue!: () => void;
+
+    /**
+     * Notifies Vue's reactivity system that the value has been updated
+     */
+    protected _triggerValue!: () => void;
+
+    /**
+     * Gets the value being validated
+     * @remarks
+     * This is used to populate the {@link ValidationHandler.value value ref} and should call {@link ValidationHandler._trackValue _trackValue}
+     * to notify Vue's reactivity system that the value has been accessed.
+     * @returns The value being validated
+     */
+    protected abstract getValue(): T;
+
+    /**
+     * Sets the value being validated
+     * @remarks
+     * This is used to update the {@link ValidationHandler.value value ref} and should call {@link ValidationHandler._triggerValue _triggerValue}
+     * to notify Vue's reactivity system that the value has been updated.
+     * @param value - The new value to set
+     */
+    protected abstract setValue(value: T): void;
+
+    /**
      * Ref to the value being validated
      * @remarks
-     * Treating this as a ref enables us to expose the value in multiple ways
-     * (i.e. via the value property on a validation object itself,
-     * or via the corresponding property of the value of a parent validation object)
+     * Treating this as a ref enables us to expose the value in multiple ways (i.e. via the value property on a validation object itself,
+     * or via the corresponding property of the value of a parent validation object).
+     *
+     * This is a computed ref created by the ValidationHandler super class and uses the {@link ValidationHandler.getValue getValue} and
+     * {@link ValidationHandler.setValue setValue} methods implemented by the subclass.
      */
-    abstract readonly value: Ref<T>;
+    readonly value: Ref<T>;
 
     /**
      * Ref for errors encountered during validation
@@ -101,6 +131,18 @@ export abstract class ValidationHandler<T = unknown> {
     constructor(schema: Schema, options: ValidationHandlerOptions<T>) {
         this.schema = schema;
         this.options = options;
+        this.value = this.initializeValue();
+    }
+
+    private initializeValue(): Ref<T> {
+        return customRef((track, trigger) => {
+            this._trackValue = track;
+            this._triggerValue = trigger;
+            return {
+                get: this.getValue.bind(this),
+                set: this.setValue.bind(this),
+            };
+        });
     }
 
     public static create(schema: Schema, options: ValidationOptions<unknown>): ValidationHandler {
