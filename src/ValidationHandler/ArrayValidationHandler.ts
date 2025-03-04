@@ -20,7 +20,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
         super(schema, options);
 
         this._value = options.value ?? schema.defaultValue ?? [];
-        this.errors = ref(makeIterableErrorObject());
+        this.errors = ref(makeIterableErrorObject({}));
         this.isValid = ref(false);
         this.fields = {};
     }

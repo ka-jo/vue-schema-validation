@@ -28,13 +28,13 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
         schema: Schema<"object">,
         options: ValidationHandlerOptions<object>,
         value: Record<string, ReadonlyRef>,
-        errors: Record<string, ReadonlyRef<Iterable<string>>> & Iterable<string>,
+        errors: Record<string, ReadonlyRef<Iterable<string>>>,
         fields: Record<string, SchemaValidation>
     ) {
         super(schema, options);
 
         this._value = reactive(value);
-        this.errors = ref(errors);
+        this.errors = ref(makeIterableErrorObject(errors));
         this.isValid = computed(() => this.areAllFieldsValid());
         this.fields = fields;
     }
@@ -105,7 +105,7 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
 
         const fields: Record<string, SchemaValidation> = {};
         const value: Record<string, ReadonlyRef> = {};
-        const errors = makeIterableErrorObject();
+        const errors: Record<string, ReadonlyRef<Iterable<string>>> = {};
         // We've already walked through all fields when creating the schema, so this isn't as efficient as it could be
         // I wonder if there's a way to initialize the schema fields and validation handler fields at the same time 🤔
         for (const fieldName of Object.keys(schema.fields)) {
