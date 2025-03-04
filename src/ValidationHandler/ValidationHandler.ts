@@ -47,7 +47,7 @@ export abstract class ValidationHandler<T = unknown> {
     /**
      * Gets the value being validated
      * @remarks
-     * This is used to populate the {@link ValidationHandler.value value ref} and should call {@link ValidationHandler._trackValue _trackValue}
+     * This is used to populate the {@link ValidationHandler.value value ref} and should call {@link ValidationHandler._trackValue _trackValue }
      * to notify Vue's reactivity system that the value has been accessed.
      * @returns The value being validated
      */
@@ -145,7 +145,7 @@ export abstract class ValidationHandler<T = unknown> {
         });
     }
 
-    public static create(schema: Schema, options: ValidationOptions<unknown>): ValidationHandler {
+    public static create(schema: Schema, options: ValidationHandlerOptions): ValidationHandler {
         switch (schema.type) {
             case "array":
                 return ArrayValidationHandler.create(schema, options);
@@ -160,7 +160,7 @@ export abstract class ValidationHandler<T = unknown> {
 }
 
 /**
- * Type for the fields of a ValidationHandler. If generic type is an object, this will be an object with the same keys as the generic type
+ * Type for the fields of a ValidationHandler. If generic type is an object or an array, this will be a record of {@link SchemaValidation} objects.
  * For non-object types, this will be undefined
  * @internal
  */

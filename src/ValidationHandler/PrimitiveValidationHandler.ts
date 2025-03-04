@@ -12,18 +12,16 @@ import { HandlerInstance } from "@/common";
  * a single value, but may not be "primitive" in the traditional sense (e.g. Date)
  */
 export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
-    readonly value: Ref<unknown>;
+    private _value: unknown;
+
     readonly errors: Ref<ReadonlyArray<string>>;
     readonly isValid: Ref<boolean>;
-    /**
-     * Even though fields is not used in this class, it is required to be defined by the base class
-     */
     readonly fields: undefined;
 
     constructor(schema: Schema<"primitive">, options: ValidationHandlerOptions) {
         super(schema, options);
 
-        this.value = ref(this.options.value ?? this.schema.defaultValue ?? null);
+        this._value = this.options.value ?? this.schema.defaultValue ?? null;
         this.errors = ref([]);
         this.isValid = ref(false);
     }
@@ -46,7 +44,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     }
 
     reset(value?: unknown): void {
-        this.value.value = value ?? this.options.value ?? this.schema.defaultValue ?? null;
+        this.setValue(value);
         this.errors.value = [];
         this.isValid.value = false;
     }
@@ -64,9 +62,15 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
         return reactive(facade);
     }
 
-    private getValue() {}
+    protected getValue(): unknown {
+        this._trackValue();
+        return this._value;
+    }
 
-    public setValue() {}
+    protected setValue(value: unknown) {
+        this._value = value ?? this.options.value ?? this.schema.defaultValue ?? null;
+        this._triggerValue();
+    }
 
     public static create(
         schema: Schema<"primitive">,

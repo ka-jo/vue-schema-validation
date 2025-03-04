@@ -1,14 +1,14 @@
-import { markRaw, reactive, readonly, ref, Ref } from "vue";
+import { computed, markRaw, reactive, readonly, ref, Ref } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import type { Schema } from "@/Schema";
-import type { ReadonlyRef } from "@/Types/util";
+import type { POJO, ReadonlyRef } from "@/Types/util";
 import type { SchemaValidation } from "@/Types/SchemaValidation";
 import type {
     ObjectSchemaValidation,
     ObjectSchemaValidationErrors,
 } from "@/Types/ObjectSchemaValidation";
-import { HandlerInstance } from "@/common";
+import { HandlerInstance, iterableFieldIterator, makeIterableErrorObject } from "@/common";
 
 /**
  * Validation handler implementation for object schemas
@@ -18,7 +18,8 @@ import { HandlerInstance } from "@/common";
  * @internal
  */
 export class ObjectValidationHandler extends ValidationHandler<object> {
-    readonly value: Ref<object>;
+    private _value: POJO;
+
     readonly errors: Ref<ObjectSchemaValidationErrors>;
     readonly isValid: Ref<boolean>;
     readonly fields: Record<string, SchemaValidation>;
@@ -27,24 +28,35 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
         schema: Schema<"object">,
         options: ValidationHandlerOptions<object>,
         value: Record<string, ReadonlyRef>,
-        errors: Record<string, ReadonlyRef<Iterable<string>>>,
+        errors: Record<string, ReadonlyRef<Iterable<string>>> & Iterable<string>,
         fields: Record<string, SchemaValidation>
     ) {
         super(schema, options);
 
-        this.value = ref({});
-        //@ts-expect-error
-        this.errors = ref([]);
-        this.isValid = ref(false);
+        this._value = reactive(value);
+        this.errors = ref(errors);
+        this.isValid = computed(() => this.areAllFieldsValid());
         this.fields = fields;
     }
 
     validate(): boolean {
-        throw new Error("Method not implemented.");
+        for (const key of Object.keys(this.fields)) {
+            const field = this.fields[key];
+            const isFieldValid = field.validate();
+            if (isFieldValid === false && this.options.abortEarly) {
+                break;
+            }
+        }
+
+        return this.isValid.value;
     }
 
-    reset(value?: object): void {
-        throw new Error("Method not implemented.");
+    reset(value: POJO = {}): void {
+        for (const key of Object.keys(this.fields)) {
+            const field = this.fields[key];
+            field.reset(value[key] ?? this.options.value ?? this.schema.defaultValue);
+        }
+        this._triggerValue();
     }
 
     toReactive(): ObjectSchemaValidation<object> {
@@ -60,6 +72,29 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
         return reactive(facade);
     }
 
+    protected getValue(): POJO {
+        this._trackValue();
+        return this._value;
+    }
+
+    protected setValue(value: POJO) {
+        for (const key of Object.keys(this.fields)) {
+            const field = this.fields[key];
+            field.value = value[key] ?? this.options.value ?? this.schema.defaultValue;
+        }
+        this._triggerValue();
+    }
+
+    private areAllFieldsValid(): boolean {
+        for (const key of Object.keys(this.fields)) {
+            const field = this.fields[key];
+            if (!field.isValid) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static create(
         schema: Schema<"object">,
         options: ValidationHandlerOptions
@@ -70,7 +105,7 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
 
         const fields: Record<string, SchemaValidation> = {};
         const value: Record<string, ReadonlyRef> = {};
-        const errors: Record<string, ReadonlyRef<Iterable<string>>> = {};
+        const errors = makeIterableErrorObject();
         // We've already walked through all fields when creating the schema, so this isn't as efficient as it could be
         // I wonder if there's a way to initialize the schema fields and validation handler fields at the same time 🤔
         for (const fieldName of Object.keys(schema.fields)) {
@@ -80,6 +115,12 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
             errors[fieldName] = fieldHandler.errors;
         }
 
-        return new ObjectValidationHandler(schema, options, value, errors, fields);
+        return new ObjectValidationHandler(
+            schema,
+            options as ValidationHandlerOptions<object>,
+            value,
+            errors,
+            fields
+        );
     }
 }

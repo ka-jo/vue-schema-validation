@@ -24,3 +24,9 @@ export type DeepPartial<T extends object> = {
  * @public
  */
 export type ElementType<T extends Array<unknown>> = T extends Array<infer U> ? U : never;
+
+/**
+ * A plain old JavaScript object
+ * @public
+ */
+export type POJO = Record<string, unknown>;

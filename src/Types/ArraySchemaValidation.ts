@@ -22,13 +22,14 @@ export interface ArraySchemaValidation<T extends Array<unknown> = Array<unknown>
 /**
  * @public
  */
-export type ArraySchemaValidationFields<T extends Array<unknown>> = {
+export type ArraySchemaValidationFields<T extends Array<unknown> = Array<unknown>> = {
     readonly [i: number]: SchemaValidation<ElementType<T>>;
 };
 
 /**
  * @public
  */
-export type ArraySchemaValidationErrors<T extends Array<unknown>> = Iterable<string> & {
-    readonly [i: number]: SchemaValidation<ElementType<T>>["errors"];
-};
+export type ArraySchemaValidationErrors<T extends Array<unknown> = Array<unknown>> =
+    Iterable<string> & {
+        readonly [i: number]: SchemaValidation<ElementType<T>>["errors"];
+    };
