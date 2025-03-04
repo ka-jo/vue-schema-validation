@@ -16,7 +16,7 @@ export abstract class Schema<T extends SchemaType = SchemaType> {
      * @returns true if the data was valid
      * @throws a {@link SchemaValidationError} if the data was invalid
      */
-    abstract validate(value: SchemaValue<T>, options: ValidationOptions): boolean;
+    abstract validate(value: SchemaValue<T>, options: SchemaValidationOptions): boolean;
 
     /**
      * The type of the schema. This is used to determine which ValidationHandler implementation to use.
@@ -104,3 +104,8 @@ export type SchemaFields<T extends SchemaType> = T extends "object"
     : T extends "array"
     ? Schema
     : undefined;
+
+/**
+ * @internal
+ */
+export type SchemaValidationOptions = Omit<ValidationOptions, "schema">;

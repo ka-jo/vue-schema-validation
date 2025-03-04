@@ -9,7 +9,7 @@ export type ValidationOptions<T = unknown> = {
      * Schema to use for validation. As of now, only Yup schemas are supported
      * @public
      */
-    // schema: Schema<T>;
+    schema: Schema<T>;
 
     /**
      * Return from validation after first error is encountered rather after all validations are run
@@ -26,7 +26,13 @@ export type ValidationOptions<T = unknown> = {
      * exists and no initial value is provided, the property will be initialized as null
      * @public
      */
-    value?: Partial<T>;
+    value?: T extends Array<any>
+        ? T
+        : T extends object
+        ? Partial<T>
+        : unknown extends T
+        ? unknown
+        : T;
 
     /**
      * State that isn't part of the validated data but is needed by the schema for validation
