@@ -1,6 +1,4 @@
 import { anything, instance, mock, when } from "ts-mockito";
-import { ref } from "vue";
-
 import { PrimitiveValidationHandler } from "@/ValidationHandler/PrimitiveValidationHandler";
 import { Schema } from "@/Schema/Schema";
 import { SchemaValidationError } from "@/Schema/SchemaValidationError";
@@ -22,13 +20,13 @@ describe("PrimitiveValidationHandler", () => {
         // Enforcing readonly at runtime is not worth the overhead for an internal class.
         // So we'll just ensure the property is typed as readonly.
         it("should be readonly", () => {
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
             // @ts-expect-error
-            handler.value = ref("");
+            handler.value = {} as any;
         });
 
         it("should be a Vue ref", () => {
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
             expect(handler.value).toBeVueRef();
         });
@@ -37,7 +35,7 @@ describe("PrimitiveValidationHandler", () => {
 
         describe("initialization", () => {
             it("should initialize with provided value", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
                     value: VALID_STRING,
                 });
 
@@ -46,14 +44,44 @@ describe("PrimitiveValidationHandler", () => {
 
             it("should initialize with schema default if no value provided", () => {
                 when(schemaMock.defaultValue).thenReturn(DEFAULT_STRING);
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
                 expect(handler.value.value).toBe(DEFAULT_STRING);
             });
 
             it("should initialize with null if no value provided and no schema default", () => {
                 when(schemaMock.defaultValue).thenReturn(undefined);
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
+
+                expect(handler.value.value).toBeNull();
+            });
+        });
+
+        describe("assignment", () => {
+            it("should use the value when given a defined value", () => {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
+
+                handler.value.value = "new string";
+
+                expect(handler.value.value).toBe("new string");
+            });
+
+            it("should use schema default when given undefined", () => {
+                when(schemaMock.defaultValue).thenReturn("some default");
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
+
+                handler.value.value = undefined;
+
+                expect(handler.value.value).toBe("some default");
+            });
+
+            // My thinking is that if the consumer explicitly passes null, they're probably trying to clear the value,
+            // so we should respect that. If they wanted the default, they would have passed undefined.
+            it("should use null when given null", () => {
+                when(schemaMock.defaultValue).thenReturn("some default");
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
+
+                handler.value.value = null;
 
                 expect(handler.value.value).toBeNull();
             });
@@ -62,7 +90,7 @@ describe("PrimitiveValidationHandler", () => {
 
     describe("errors property", () => {
         it("should be a Vue ref", () => {
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
             expect(handler.errors).toBeVueRef();
         });
@@ -78,13 +106,13 @@ describe("PrimitiveValidationHandler", () => {
         });
 
         it("should be iterable", () => {
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
             expect(handler.errors.value).toBeIterable();
         });
 
         it("should initialize as an empty iterable", () => {
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
             expect(handler.errors.value).toBeIterable([]);
         });
@@ -92,7 +120,7 @@ describe("PrimitiveValidationHandler", () => {
 
     describe("isValid property", () => {
         it("should be a Vue ref", () => {
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
             expect(handler.isValid).toBeVueRef();
         });
@@ -106,7 +134,7 @@ describe("PrimitiveValidationHandler", () => {
         });
 
         it("should initialize to false", () => {
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
             expect(handler.isValid.value).toBe(false);
         });
@@ -114,7 +142,7 @@ describe("PrimitiveValidationHandler", () => {
 
     describe("fields property", () => {
         it("should be undefined", () => {
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
             expect(handler.fields).toBeUndefined();
         });
@@ -127,7 +155,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should return true", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
                     value: VALID_STRING,
                 });
 
@@ -137,7 +165,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should set isValid to true", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
                     value: VALID_STRING,
                 });
 
@@ -149,7 +177,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should reset errors", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
                     value: VALID_STRING,
                 });
 
@@ -167,7 +195,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should return false", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
                     value: INVALID_STRING,
                 });
 
@@ -177,7 +205,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should set isValid to false", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
                     value: INVALID_STRING,
                 });
 
@@ -187,7 +215,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should populate errors", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
                     value: INVALID_STRING,
                 });
 
@@ -201,7 +229,7 @@ describe("PrimitiveValidationHandler", () => {
     describe("reset method", () => {
         describe("given a value", () => {
             it("should reset handler value to provided value", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
                     value: DEFAULT_STRING,
                 });
 
@@ -213,7 +241,7 @@ describe("PrimitiveValidationHandler", () => {
 
         describe("given no value", () => {
             it("should reset handler value to initial value", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
                     value: VALID_STRING,
                 });
 
@@ -228,7 +256,7 @@ describe("PrimitiveValidationHandler", () => {
 
             it("should reset handler value to schema default if no initial value", () => {
                 when(schemaMock.defaultValue).thenReturn(DEFAULT_STRING);
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
                 handler.reset();
 
@@ -238,7 +266,7 @@ describe("PrimitiveValidationHandler", () => {
 
         it("should set isValid to false", () => {
             when(schemaMock.validate(anything(), anything())).thenReturn(true);
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
                 value: VALID_STRING,
             });
 
@@ -255,7 +283,7 @@ describe("PrimitiveValidationHandler", () => {
             when(schemaMock.validate(anything(), anything())).thenThrow(
                 new SchemaValidationError(["invalid string"])
             );
-            const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
             handler.validate();
 
@@ -270,7 +298,7 @@ describe("PrimitiveValidationHandler", () => {
     describe("toReactive method", () => {
         describe("return value", () => {
             it("should be an object", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
                 const reactive = handler.toReactive();
 
@@ -278,7 +306,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should be reactive", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
                 const reactive = handler.toReactive();
 
@@ -286,7 +314,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should have HandlerInstance symbol property", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
                 const reactive = handler.toReactive();
 
@@ -294,7 +322,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should have value property", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
                 const reactive = handler.toReactive();
 
@@ -303,7 +331,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should have readonly errors property", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
                 const reactive = handler.toReactive();
 
@@ -316,7 +344,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should have readonly isValid property", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
                 const reactive = handler.toReactive();
 
@@ -329,7 +357,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should have validate method", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
                 const reactive = handler.toReactive();
 
@@ -337,7 +365,7 @@ describe("PrimitiveValidationHandler", () => {
             });
 
             it("should have reset method", () => {
-                const handler = new PrimitiveValidationHandler(instance(schemaMock), {});
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
                 const reactive = handler.toReactive();
 
