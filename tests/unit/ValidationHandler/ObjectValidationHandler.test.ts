@@ -629,24 +629,100 @@ describe("ObjectValidationHandler", () => {
     });
 
     describe("toReactive method", () => {
-        it("should return schema validation object", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+        describe("return value", () => {
+            it("should be schema validation object", () => {
+                const handler = ObjectValidationHandler.create(instance(schemaMock), {});
 
-            const reactive = handler.toReactive();
+                const reactive = handler.toReactive();
 
-            expect(reactive).toBeSchemaValidation(Object);
-        });
+                expect(reactive).toBeSchemaValidation(Object);
+            });
 
-        it("should return schema validation object with fields", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            describe("fields property", () => {
+                it("should be readonly", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
 
-            const reactive = handler.toReactive();
+                    const reactive = handler.toReactive();
 
-            expect(reactive.fields).toMatchObject({
-                stringField: expect.toBeSchemaValidation(String),
-                numberField: expect.toBeSchemaValidation(Number),
-                booleanField: expect.toBeSchemaValidation(Boolean),
-                objectField: expect.toBeSchemaValidation(Object),
+                    expect(() => {
+                        //@ts-expect-error
+                        reactive.fields = {} as any;
+                    }).toThrow();
+                });
+
+                it("should have a property for each schema field", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(reactive.fields).toMatchObject({
+                        stringField: expect.toBeSchemaValidation(String),
+                        numberField: expect.toBeSchemaValidation(Number),
+                        booleanField: expect.toBeSchemaValidation(Boolean),
+                        objectField: expect.toBeSchemaValidation(Object),
+                    });
+                });
+
+                it("should have readonly properties", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+                    const reactive = handler.toReactive();
+                    const originalFields = reactive.fields;
+
+                    //@ts-expect-error
+                    reactive.fields.stringField = {} as any;
+
+                    expect(reactive.fields).toEqual(originalFields);
+                });
+            });
+
+            it("isValid property should be readonly", () => {
+                const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+                const reactive = handler.toReactive();
+
+                expect(() => {
+                    //@ts-expect-error
+                    reactive.isValid = {} as any;
+                }).toThrow();
+            });
+
+            describe("errors property", () => {
+                it("should be readonly", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(() => {
+                        //@ts-expect-error
+                        reactive.errors = {} as any;
+                    }).toThrow();
+                });
+
+                it("should have a property for each schema field", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(reactive.errors).toMatchObject({
+                        stringField: expect.toBeIterable(),
+                        numberField: expect.toBeIterable(),
+                        booleanField: expect.toBeIterable(),
+                        objectField: expect.toBeIterable(),
+                    });
+                });
+
+                it("should have readonly properties", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+                    const reactive = handler.toReactive();
+                    const originalErrors = reactive.errors;
+
+                    //@ts-expect-error
+                    reactive.errors.stringField = {} as any;
+
+                    expect(reactive.errors).toEqual(originalErrors);
+                });
             });
         });
     });

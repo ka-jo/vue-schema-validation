@@ -67,7 +67,7 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
             value: this.value,
             errors: readonly(this.errors),
             isValid: readonly(this.isValid),
-            fields: shallowReadonly(this.fields),
+            fields: shallowReadonly(ref(this.fields)),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
         };
