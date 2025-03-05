@@ -24,4 +24,12 @@ describe("UnknownSchema", () => {
             expect(schema.validate()).toBe(true);
         });
     });
+
+    describe("validateRoot method", () => {
+        it("should return true", () => {
+            const schema = new UnknownSchema();
+
+            expect(schema.validateRoot()).toBe(true);
+        });
+    });
 });

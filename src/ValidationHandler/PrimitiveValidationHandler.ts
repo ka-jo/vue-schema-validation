@@ -36,8 +36,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
             if (e instanceof SchemaValidationError) {
                 this.errors.value = e.errors;
             } else {
-                // If it isn't a SchemaValidationError, we don't know what it is, so we shouldn't populate the errors with it
-                this.errors.value = [];
+                throw e;
             }
         }
         return this.isValid.value;

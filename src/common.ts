@@ -1,3 +1,4 @@
+import { Ref } from "vue";
 import { ReadonlyRef } from "./Types/util";
 
 export const HandlerInstance: unique symbol = Symbol("HandlerInstance");
@@ -23,9 +24,18 @@ export function* iterableFieldIterator(this: Record<PropertyKey, ReadonlyRef<Ite
  * @returns the errors object with the Symbol.iterator property added
  */
 export function makeIterableErrorObject(
-    errors: Record<PropertyKey, ReadonlyRef<Iterable<string>>>
-): Record<PropertyKey, ReadonlyRef<Iterable<string>>> & Iterable<string> {
+    errors: Record<PropertyKey, ReadonlyRef<Iterable<string>>>,
+    rootErrors: Ref<ReadonlyArray<string>>
+): ErrorObject {
     //@ts-ignore: I don't like needing to do TypeScript tricks like this, but the type coming in should not already have Symbol.iterator
     errors[Symbol.iterator] = iterableFieldIterator.bind(errors);
-    return errors as Record<PropertyKey, ReadonlyRef<Iterable<string>>> & Iterable<string>;
+    //@ts-ignore: ¯\_(ツ)_/¯
+    errors.$root = rootErrors;
+    return errors as ErrorObject;
 }
+
+/**
+ * @internal
+ */
+export type ErrorObject = Record<PropertyKey, ReadonlyRef<Iterable<string>>> &
+    Iterable<string> & { $root: Ref<ReadonlyArray<string>> };

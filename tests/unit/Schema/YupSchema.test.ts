@@ -16,7 +16,7 @@ import { INVALID_STRING, INVALID_TEST_OBJECT } from "tests/fixtures/invalid-data
 describe("YupSchema", () => {
     // The test cases for the static create method will cover initialization of this property
     // so these tests will only cover typing for now
-    // also, I consider the jank of these tests to be the fault of limitations of
+    // also, I consider the jank of these tests to be the fault of limitations of type testing in vitest
     describe("defaultValue property", () => {
         it("should be readonly", () => {
             expectTypeOf<Schema>()
@@ -106,6 +106,47 @@ describe("YupSchema", () => {
                 const schema = YupSchema.create(instance(yupMock));
 
                 expect(() => schema.validate(INVALID_STRING, {})).toThrow(SchemaValidationError);
+            });
+        });
+    });
+
+    describe("validateRoot method", () => {
+        let yupMock: yup_Schema<TestSchema>;
+
+        beforeEach(() => {
+            yupMock = mock(yup_Schema);
+            when(yupMock.type).thenReturn("string");
+            when(yupMock.__isYupSchema__).thenReturn(true);
+            when(yupMock.spec).thenReturn({ default: undefined } as any);
+        });
+
+        describe("given valid data", () => {
+            beforeEach(() => {
+                when(yupMock.validateSync(VALID_STRING, anything())).thenReturn();
+            });
+
+            it("should return true", () => {
+                const schema = YupSchema.create(instance(yupMock));
+
+                const result = schema.validateRoot(VALID_STRING, {});
+
+                expect(result).toBe(true);
+            });
+        });
+
+        describe("given invalid data", () => {
+            beforeEach(() => {
+                when(yupMock.validateSync(INVALID_STRING, anything())).thenThrow(
+                    new yup_ValidationError("invalid data")
+                );
+            });
+
+            it("should throw a SchemaValidationError", () => {
+                const schema = YupSchema.create(instance(yupMock));
+
+                expect(() => schema.validateRoot(INVALID_STRING, {})).toThrow(
+                    SchemaValidationError
+                );
             });
         });
     });

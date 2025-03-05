@@ -16,6 +16,7 @@ import {
     SchemaValue,
     UnknownSchema,
     SchemaValidationError,
+    SchemaValidationOptions,
 } from "@/Schema";
 
 const UNSUPPORTED_SCHEMA_TYPE_MESSAGE = "Received unsupported schema type when creating YupSchema";
@@ -32,9 +33,22 @@ export class YupSchema<T extends SchemaType = SchemaType> extends Schema<T> {
         this.schema = schema;
     }
 
-    validate(value: SchemaValue<T>, options: ValidationOptions): boolean {
+    validate(value: SchemaValue<T>, options: SchemaValidationOptions): boolean {
         try {
             this.schema.validateSync(value, options);
+            return true;
+        } catch (ex) {
+            if (ex instanceof yup_ValidationError) {
+                throw new SchemaValidationError(ex.errors);
+            } else {
+                throw ex;
+            }
+        }
+    }
+
+    validateRoot(value: SchemaValue<T>, options: SchemaValidationOptions): boolean {
+        try {
+            this.schema.validateSync(value, { ...options, recursive: false });
             return true;
         } catch (ex) {
             if (ex instanceof yup_ValidationError) {

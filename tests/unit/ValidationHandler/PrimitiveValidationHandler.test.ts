@@ -224,6 +224,19 @@ describe("PrimitiveValidationHandler", () => {
                 expect(handler.errors.value).toBeIterable(["invalid string"]);
             });
         });
+
+        it("should throw if an unexpected error occurs", () => {
+            when(schemaMock.validate(anything(), anything())).thenThrow(
+                new Error("unexpected error")
+            );
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {
+                value: VALID_STRING,
+            });
+
+            expect(() => {
+                handler.validate();
+            }).toThrowError("unexpected error");
+        });
     });
 
     describe("reset method", () => {

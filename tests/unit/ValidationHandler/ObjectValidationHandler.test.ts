@@ -247,6 +247,12 @@ describe("ObjectValidationHandler", () => {
             });
         });
 
+        it("should contain iterable $root property", () => {
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+            expect(handler.errors.value).toHaveProperty("$root", expect.toBeIterable());
+        });
+
         it("should be iterable for all field errors", () => {
             when(stringSchemaMock.validate(anything(), anything())).thenThrow(
                 new SchemaValidationError(["string error"])
@@ -328,36 +334,9 @@ describe("ObjectValidationHandler", () => {
     });
 
     describe("validate method", () => {
-        // I'm a little iffy on validating the child schemas here because it skips the fact
-        // that the child ValidationHandler should first be called, but I don't want to mock
-        // the child ValidationHandlers because that would mean mocking an internal of the test subject.
-        // Maybe in the future, the ObjectValidationHandler constructor could take a record of ValidationHandlers
-        // instead of building it itself?
-
-        // Not sure if this is worth testing since it seems more focused on an implmentation detail than it is an outcome
-        it("should delegate to field validation", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {
-                value: VALID_TEST_OBJECT,
-            });
-
-            handler.validate();
-
-            verify(schemaMock.validate(anything(), anything())).never();
-
-            verify(stringSchemaMock.validate(anything(), anything())).once();
-            verify(numberSchemaMock.validate(anything(), anything())).once();
-            verify(booleanSchemaMock.validate(anything(), anything())).once();
-
-            // Nested object properties should also delegate to fields
-            verify(objectSchemaMock.validate(anything(), anything())).never();
-
-            verify(nestedStringSchemaMock.validate(anything(), anything())).once();
-            verify(nestedNumberSchemaMock.validate(anything(), anything())).once();
-            verify(nestedBooleanSchemaMock.validate(anything(), anything())).once();
-        });
-
         describe("given valid data", () => {
             beforeEach(() => {
+                when(schemaMock.validateRoot(VALID_TEST_OBJECT, anything())).thenReturn(true);
                 when(
                     stringSchemaMock.validate(VALID_TEST_OBJECT.stringField, anything())
                 ).thenReturn(true);
@@ -402,6 +381,7 @@ describe("ObjectValidationHandler", () => {
                 expect(handler.errors.value).toBeIterable([]);
                 expect(handler.errors.value.objectField).toBeIterable([]);
                 expect(handler.errors.value).toMatchObject({
+                    $root: expect.toBeIterable([]),
                     stringField: expect.toBeIterable([]),
                     numberField: expect.toBeIterable([]),
                     booleanField: expect.toBeIterable([]),
@@ -416,6 +396,9 @@ describe("ObjectValidationHandler", () => {
 
         describe("given invalid data", () => {
             beforeEach(() => {
+                when(schemaMock.validateRoot(anything(), anything())).thenThrow(
+                    new SchemaValidationError(["root error"])
+                );
                 when(
                     stringSchemaMock.validate(INVALID_TEST_OBJECT.stringField, anything())
                 ).thenThrow(new SchemaValidationError(["stringField error"]));
@@ -475,17 +458,9 @@ describe("ObjectValidationHandler", () => {
                 });
 
                 handler.validate();
-                const errors = Array.from(handler.errors.value);
 
-                expect(errors).toEqual([
-                    "stringField error",
-                    "numberField error",
-                    "booleanField error",
-                    "nestedStringField error",
-                    "nestedNumberField error",
-                    "nestedBooleanField error",
-                ]);
                 expect(handler.errors.value).toMatchObject({
+                    $root: expect.toBeIterable(["root error"]),
                     stringField: expect.toBeIterable(["stringField error"]),
                     numberField: expect.toBeIterable(["numberField error"]),
                     booleanField: expect.toBeIterable(["booleanField error"]),
@@ -496,6 +471,20 @@ describe("ObjectValidationHandler", () => {
                     ]),
                 });
             });
+        });
+
+        it("should throw if an unexpected error occurs", () => {
+            when(stringSchemaMock.validate(anything(), anything())).thenThrow(
+                new Error("unexpected")
+            );
+
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                value: VALID_TEST_OBJECT,
+            });
+
+            expect(() => {
+                handler.validate();
+            }).toThrow(Error);
         });
     });
 
@@ -573,6 +562,9 @@ describe("ObjectValidationHandler", () => {
         });
 
         it("should reset errors", () => {
+            when(schemaMock.validateRoot(anything(), anything())).thenThrow(
+                new SchemaValidationError(["root error"])
+            );
             when(stringSchemaMock.validate(anything(), anything())).thenThrow(
                 new SchemaValidationError(["stringField error"])
             );
@@ -598,15 +590,8 @@ describe("ObjectValidationHandler", () => {
 
             handler.validate();
 
-            expect(handler.errors.value).toBeIterable([
-                "stringField error",
-                "numberField error",
-                "booleanField error",
-                "nestedStringField error",
-                "nestedNumberField error",
-                "nestedBooleanField error",
-            ]);
             expect(handler.errors.value).toMatchObject({
+                $root: expect.toBeIterable(["root error"]),
                 stringField: expect.toBeIterable(["stringField error"]),
                 numberField: expect.toBeIterable(["numberField error"]),
                 booleanField: expect.toBeIterable(["booleanField error"]),
@@ -620,6 +605,7 @@ describe("ObjectValidationHandler", () => {
             handler.reset();
 
             expect(handler.errors.value).toMatchObject({
+                $root: expect.toBeIterable([]),
                 stringField: expect.toBeIterable([]),
                 numberField: expect.toBeIterable([]),
                 booleanField: expect.toBeIterable([]),

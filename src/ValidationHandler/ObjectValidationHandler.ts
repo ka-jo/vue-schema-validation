@@ -1,14 +1,14 @@
 import { computed, markRaw, reactive, readonly, ref, Ref, shallowReadonly } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
-import type { Schema } from "@/Schema";
+import { Schema, SchemaValidationError } from "@/Schema";
 import type { POJO, ReadonlyRef } from "@/Types/util";
 import type { SchemaValidation } from "@/Types/SchemaValidation";
 import type {
     ObjectSchemaValidation,
     ObjectSchemaValidationErrors,
 } from "@/Types/ObjectSchemaValidation";
-import { HandlerInstance, iterableFieldIterator, makeIterableErrorObject } from "@/common";
+import { HandlerInstance, makeIterableErrorObject } from "@/common";
 
 /**
  * Validation handler implementation for object schemas
@@ -19,6 +19,7 @@ import { HandlerInstance, iterableFieldIterator, makeIterableErrorObject } from 
  */
 export class ObjectValidationHandler extends ValidationHandler<POJO> {
     private _value: POJO;
+    private _rootErrors: Ref<ReadonlyArray<string>>;
 
     readonly schema!: Schema<"object">;
     readonly errors: Ref<ObjectSchemaValidationErrors>;
@@ -35,24 +36,26 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
         super(schema, options);
 
         this._value = reactive(value);
-        this.errors = ref(makeIterableErrorObject(errors));
-        this.isValid = computed(() => this.areAllFieldsValid());
+        this._rootErrors = ref([]);
+        this.errors = ref(makeIterableErrorObject(errors, this._rootErrors));
+        this.isValid = computed(() => this.isRootValid() && this.areAllFieldsValid());
         this.fields = fields;
     }
 
     validate(): boolean {
-        for (const key of Object.keys(this.fields)) {
-            const field = this.fields[key];
-            const isFieldValid = field.validate();
-            if (isFieldValid === false && this.options.abortEarly) {
-                break;
-            }
+        let isValid = this.performRootValidation();
+        if (isValid === false && this.options.abortEarly) {
+            return isValid;
         }
 
-        return this.isValid.value;
+        isValid = this.performFieldValidation() && isValid;
+
+        return isValid;
     }
 
     reset(value: POJO = {}): void {
+        this._rootErrors.value = [];
+
         value = Object.assign({}, this.schema.defaultValue, this.options.value, value);
         for (const key of Object.keys(this.fields)) {
             const field = this.fields[key];
@@ -88,6 +91,36 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
         this._triggerValue();
     }
 
+    private performRootValidation(): boolean {
+        try {
+            this.schema.validateRoot(this._value, this.options);
+            return true;
+        } catch (ex) {
+            if (ex instanceof SchemaValidationError) {
+                this._rootErrors.value = ex.errors;
+                return false;
+            } else {
+                throw ex;
+            }
+        }
+    }
+
+    private isRootValid(): boolean {
+        return this._rootErrors.value.length === 0;
+    }
+
+    private performFieldValidation(): boolean {
+        let isValid = true;
+        for (const key of Object.keys(this.fields)) {
+            const field = this.fields[key];
+            isValid = field.validate();
+            if (isValid === false && this.options.abortEarly) {
+                break;
+            }
+        }
+        return isValid;
+    }
+
     private areAllFieldsValid(): boolean {
         for (const key of Object.keys(this.fields)) {
             const field = this.fields[key];
@@ -109,7 +142,7 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
         const initialValue: Record<string, unknown> = options.value ?? schema.defaultValue ?? {};
         const fields: Record<string, SchemaValidation> = {};
         const value: Record<string, ReadonlyRef> = {};
-        const errors: Record<string, ReadonlyRef<Iterable<string>>> = {};
+        const errors: Record<string, ReadonlyRef<Iterable<string>>> = { $root: undefined as any };
         // We've already walked through all fields when creating the schema, so this isn't as efficient as it could be
         // I wonder if there's a way to initialize the schema fields and validation handler fields at the same time 🤔
         for (const fieldName of Object.keys(schema.fields)) {

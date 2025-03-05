@@ -8,4 +8,8 @@ export class UnknownSchema extends Schema<"unknown"> {
     validate() {
         return true;
     }
+
+    validateRoot() {
+        return true;
+    }
 }

@@ -19,6 +19,20 @@ export abstract class Schema<T extends SchemaType = SchemaType> {
     abstract validate(value: SchemaValue<T>, options: SchemaValidationOptions): boolean;
 
     /**
+     * Validate the root value of the schema
+     * @param value - Value to validate
+     * @param options - Options to use for validation
+     * @returns true if the data was valid
+     * @throws a {@link SchemaValidationError} if the data was invalid
+     * @remarks
+     * Object and array schemas can have validation rules that only apply to the "root" value as opposed to the fields.
+     * For example, an array can have rules for min/max length, and an object can have a rule for no unknown fields.
+     * In order to support the {@link ValidationOptions.abortEarly | abortEarly} option, we need to be able to validate
+     * the root value separately from the fields.
+     */
+    abstract validateRoot(value: SchemaValue<T>, options: SchemaValidationOptions): boolean;
+
+    /**
      * The type of the schema. This is used to determine which ValidationHandler implementation to use.
      */
     readonly type: T;

@@ -44,5 +44,7 @@ export type ObjectSchemaValidationFields<T extends object = POJO> = {
  * @public
  */
 export type ObjectSchemaValidationErrors<T extends object = POJO> = Iterable<string> & {
+    readonly $root: ReadonlyArray<string>;
+} & {
     readonly [K in keyof T]-?: SchemaValidation<NonNullable<T[K]>>["errors"];
 };
