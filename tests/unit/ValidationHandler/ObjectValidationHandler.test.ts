@@ -628,9 +628,39 @@ describe("ObjectValidationHandler", () => {
         });
     });
 
+    describe("toReactive method", () => {
+        it("should return schema validation object", () => {
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+            const reactive = handler.toReactive();
+
+            expect(reactive).toBeSchemaValidation(Object);
+        });
+
+        it("should return schema validation object with fields", () => {
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+            const reactive = handler.toReactive();
+
+            expect(reactive.fields).toMatchObject({
+                stringField: expect.toBeSchemaValidation(String),
+                numberField: expect.toBeSchemaValidation(Number),
+                booleanField: expect.toBeSchemaValidation(Boolean),
+                objectField: expect.toBeSchemaValidation(Object),
+            });
+        });
+    });
+
+    // We're already using the static create method in the rest of the tests, so this is just a formality
     describe("static create method", () => {
         describe("given initial value", () => {
-            it("should throw a TypeError if ");
+            it("should throw a TypeError if provided value is not an object", () => {
+                expect(() => {
+                    ObjectValidationHandler.create(instance(schemaMock), {
+                        value: "not an object",
+                    });
+                }).toThrow(TypeError);
+            });
 
             it("should return an instance of ObjectValidationHandler with initial value", () => {
                 const handler = ObjectValidationHandler.create(instance(schemaMock), {

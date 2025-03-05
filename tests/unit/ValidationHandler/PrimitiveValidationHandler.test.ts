@@ -343,6 +343,14 @@ describe("PrimitiveValidationHandler", () => {
                 }).toThrowError();
             });
 
+            it("should not have fields property", () => {
+                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
+
+                const reactive = handler.toReactive();
+
+                expect(reactive).not.toHaveProperty("fields");
+            });
+
             it("should have readonly isValid property", () => {
                 const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
