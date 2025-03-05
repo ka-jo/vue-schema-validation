@@ -117,6 +117,105 @@ describe("ObjectValidationHandler", () => {
                 expect(handler.value.value).toEqual(DEFAULT_TEST_OBJECT);
             });
         });
+
+        describe("assignment", () => {
+            describe("given a partial value", () => {
+                it("should merge provided value with schema default", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                        value: VALID_TEST_OBJECT,
+                    });
+
+                    handler.value.value = {
+                        stringField: "new string",
+                    };
+
+                    expect(handler.value.value).toEqual({
+                        stringField: "new string",
+                        numberField: DEFAULT_NUMBER,
+                        booleanField: DEFAULT_BOOLEAN,
+                        objectField: DEFAULT_NESTED_OBJECT,
+                    });
+                });
+
+                // If the schema provides a partial default value, we should fall back to the schema defaults for the missing fields
+                it("should merge provided value with schema default and field defaults", () => {
+                    when(schemaMock.defaultValue).thenReturn({
+                        stringField: DEFAULT_STRING,
+                    });
+                    when(booleanSchemaMock.defaultValue).thenReturn(false);
+                    when(objectSchemaMock.defaultValue).thenReturn({
+                        nestedStringField: DEFAULT_STRING,
+                    });
+                    when(nestedNumberSchemaMock.defaultValue).thenReturn(555);
+                    when(nestedBooleanSchemaMock.defaultValue).thenReturn(false);
+
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                        value: VALID_TEST_OBJECT,
+                    });
+
+                    handler.value.value = {
+                        numberField: 777,
+                    };
+
+                    expect(handler.value.value).toEqual({
+                        stringField: DEFAULT_STRING,
+                        numberField: 777,
+                        booleanField: false,
+                        objectField: {
+                            nestedStringField: DEFAULT_STRING,
+                            nestedNumberField: 555,
+                            nestedBooleanField: false,
+                        },
+                    });
+                });
+
+                // If the schema provides a partial default value (or no default value) and the field has no default value,
+                // the field value should be set to null
+                it("should result in null value if no schema default for field", () => {
+                    when(schemaMock.defaultValue).thenReturn({
+                        stringField: DEFAULT_STRING,
+                    });
+                    when(numberSchemaMock.defaultValue).thenReturn(undefined);
+                    when(booleanSchemaMock.defaultValue).thenReturn(undefined);
+                    when(objectSchemaMock.defaultValue).thenReturn({
+                        nestedStringField: DEFAULT_STRING,
+                    });
+                    when(nestedNumberSchemaMock.defaultValue).thenReturn(undefined);
+                    when(nestedBooleanSchemaMock.defaultValue).thenReturn(undefined);
+
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                        value: VALID_TEST_OBJECT,
+                    });
+
+                    handler.value.value = {
+                        numberField: 777,
+                    };
+
+                    expect(handler.value.value).toEqual({
+                        stringField: DEFAULT_STRING,
+                        numberField: 777,
+                        booleanField: null,
+                        objectField: {
+                            nestedStringField: DEFAULT_STRING,
+                            nestedNumberField: null,
+                            nestedBooleanField: null,
+                        },
+                    });
+                });
+            });
+
+            describe("given a complete value", () => {
+                it("should replace value with provided value", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                        value: VALID_TEST_OBJECT,
+                    });
+
+                    handler.value.value = INVALID_TEST_OBJECT;
+
+                    expect(handler.value.value).toEqual(INVALID_TEST_OBJECT);
+                });
+            });
+        });
     });
 
     describe("errors property", () => {

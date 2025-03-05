@@ -44,7 +44,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     }
 
     reset(value?: unknown): void {
-        this.setValue(value);
+        this.setValue(value ?? this.options.value);
         this.errors.value = [];
         this.isValid.value = false;
     }
@@ -68,7 +68,11 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     }
 
     protected setValue(value: unknown) {
-        this._value = value ?? this.options.value ?? this.schema.defaultValue ?? null;
+        if (value !== null) {
+            // We should allow null values to be set, but we should not allow undefined values
+            value = value ?? this.schema.defaultValue ?? null;
+        }
+        this._value = value;
         this._triggerValue();
     }
 
