@@ -1,4 +1,4 @@
-import { computed, markRaw, reactive, readonly, ref, Ref } from "vue";
+import { computed, markRaw, reactive, readonly, ref, Ref, shallowReadonly } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import type { Schema } from "@/Schema";
@@ -17,16 +17,17 @@ import { HandlerInstance, iterableFieldIterator, makeIterableErrorObject } from 
  * within this class is much simpler if you treat the value as if it were an empty object.
  * @internal
  */
-export class ObjectValidationHandler extends ValidationHandler<object> {
+export class ObjectValidationHandler extends ValidationHandler<POJO> {
     private _value: POJO;
 
+    readonly schema!: Schema<"object">;
     readonly errors: Ref<ObjectSchemaValidationErrors>;
     readonly isValid: Ref<boolean>;
     readonly fields: Record<string, SchemaValidation>;
 
     constructor(
         schema: Schema<"object">,
-        options: ValidationHandlerOptions<object>,
+        options: ValidationHandlerOptions<POJO>,
         value: Record<string, ReadonlyRef>,
         errors: Record<string, ReadonlyRef<Iterable<string>>>,
         fields: Record<string, SchemaValidation>
@@ -52,20 +53,21 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
     }
 
     reset(value: POJO = {}): void {
+        value = Object.assign({}, this.schema.defaultValue, this.options.value, value);
         for (const key of Object.keys(this.fields)) {
             const field = this.fields[key];
-            field.reset(value[key] ?? this.options.value ?? this.schema.defaultValue);
+            field.reset(value[key]);
         }
         this._triggerValue();
     }
 
-    toReactive(): ObjectSchemaValidation<object> {
+    toReactive(): ObjectSchemaValidation<POJO> {
         const facade = {
             [HandlerInstance]: markRaw(this),
             value: this.value,
             errors: readonly(this.errors),
             isValid: readonly(this.isValid),
-            fields: this.fields,
+            fields: shallowReadonly(this.fields),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
         };
@@ -78,9 +80,10 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
     }
 
     protected setValue(value: POJO) {
+        value = Object.assign({}, this.schema.defaultValue, value);
         for (const key of Object.keys(this.fields)) {
             const field = this.fields[key];
-            field.value = value[key] ?? this.options.value ?? this.schema.defaultValue;
+            field.value = value[key];
         }
         this._triggerValue();
     }
@@ -95,32 +98,39 @@ export class ObjectValidationHandler extends ValidationHandler<object> {
         return true;
     }
 
-    public static create(
+    public static create<POJO>(
         schema: Schema<"object">,
         options: ValidationHandlerOptions
     ): ObjectValidationHandler {
-        if (options.value && typeof options.value !== "object") {
+        if (this.hasValidObjectValue(options) === false) {
             throw new TypeError("Received initial value that is not an object for object schema");
         }
 
+        const initialValue: Record<string, unknown> = options.value ?? schema.defaultValue ?? {};
         const fields: Record<string, SchemaValidation> = {};
         const value: Record<string, ReadonlyRef> = {};
         const errors: Record<string, ReadonlyRef<Iterable<string>>> = {};
         // We've already walked through all fields when creating the schema, so this isn't as efficient as it could be
         // I wonder if there's a way to initialize the schema fields and validation handler fields at the same time 🤔
         for (const fieldName of Object.keys(schema.fields)) {
-            const fieldHandler = ValidationHandler.create(schema.fields[fieldName], options);
+            const fieldHandler = ValidationHandler.create(schema.fields[fieldName], {
+                ...options,
+                value: initialValue[fieldName],
+            });
             fields[fieldName] = fieldHandler.toReactive();
             value[fieldName] = fieldHandler.value;
             errors[fieldName] = fieldHandler.errors;
         }
 
-        return new ObjectValidationHandler(
-            schema,
-            options as ValidationHandlerOptions<object>,
-            value,
-            errors,
-            fields
-        );
+        return new ObjectValidationHandler(schema, options, value, errors, fields);
+    }
+
+    private static hasValidObjectValue(
+        options: ValidationHandlerOptions
+    ): options is ValidationHandlerOptions<POJO> {
+        if (options.value) {
+            return typeof options.value === "object" && !Array.isArray(options.value);
+        }
+        return true;
     }
 }

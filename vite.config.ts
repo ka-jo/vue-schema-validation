@@ -10,6 +10,7 @@ export default defineConfig({
             "./tests/util/expect-to-be-iterable.ts",
             "./tests/util/expect-to-be-vue-ref.ts",
             "./tests/util/expect-to-be-reactive.ts",
+            "./tests/util/expect-to-be-schema-validation.ts",
         ],
     },
 });

@@ -27,6 +27,8 @@ export type ElementType<T extends Array<unknown>> = T extends Array<infer U> ? U
 
 /**
  * A plain old JavaScript object
+ * @privateRemarks
+ * It's unfortunate, but typing is just easier everywhere if we use `Record<string, any>` instead of `Record<string, unknown>`
  * @public
  */
-export type POJO = Record<string, unknown>;
+export type POJO = Record<string, any>;

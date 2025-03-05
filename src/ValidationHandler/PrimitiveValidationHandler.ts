@@ -18,7 +18,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     readonly isValid: Ref<boolean>;
     readonly fields: undefined;
 
-    constructor(schema: Schema<"primitive">, options: ValidationHandlerOptions) {
+    constructor(schema: Schema, options: ValidationHandlerOptions) {
         super(schema, options);
 
         this._value = this.options.value ?? this.schema.defaultValue ?? null;
@@ -73,7 +73,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     }
 
     public static create(
-        schema: Schema<"primitive">,
+        schema: Schema,
         options: ValidationHandlerOptions
     ): PrimitiveValidationHandler {
         return new PrimitiveValidationHandler(schema, options);

@@ -1,6 +1,6 @@
 import { customRef, Ref } from "vue";
 
-import { Schema } from "@/Schema";
+import { DerivedSchemaType, Schema, SchemaType } from "@/Schema";
 import { ValidationOptions } from "@/Types/ValidationOptions";
 import { SchemaValidation } from "@/Types/SchemaValidation";
 import {
@@ -148,9 +148,9 @@ export abstract class ValidationHandler<T = unknown> {
     public static create(schema: Schema, options: ValidationHandlerOptions): ValidationHandler {
         switch (schema.type) {
             case "array":
-                return ArrayValidationHandler.create(schema, options);
+                return ArrayValidationHandler.create(schema as Schema<"array">, options);
             case "object":
-                return ObjectValidationHandler.create(schema, options);
+                return ObjectValidationHandler.create(schema as Schema<"object">, options);
             case "primitive":
             case "unknown":
             default:

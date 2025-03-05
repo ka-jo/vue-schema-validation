@@ -21,7 +21,7 @@ export abstract class Schema<T extends SchemaType = SchemaType> {
     /**
      * The type of the schema. This is used to determine which ValidationHandler implementation to use.
      */
-    readonly type: SchemaType;
+    readonly type: T;
 
     /**
      * The Schema instance to use when validating child fields of a schema.
@@ -109,3 +109,14 @@ export type SchemaFields<T extends SchemaType> = T extends "object"
  * @internal
  */
 export type SchemaValidationOptions = Omit<ValidationOptions, "schema">;
+
+/**
+ * @internal
+ */
+export type DerivedSchemaType<T> = T extends Array<any>
+    ? "array"
+    : T extends object
+    ? "object"
+    : unknown extends T
+    ? "unknown"
+    : "primitive";

@@ -4,21 +4,15 @@ export const VALID_STRING = "valid";
 export const VALID_NUMBER = 0;
 export const VALID_BOOLEAN = true;
 
-export const VALID_NESTED_OBJECT: Readonly<NestedObject> = Object.freeze({
-    nestedRequiredField: "nested valid required field",
-    nestedStringField: "nested valid string field",
-    nestedNumberField: 0,
-    nestedBooleanField: false,
+export const VALID_NESTED_OBJECT = Object.freeze({
+    nestedStringField: VALID_STRING,
+    nestedNumberField: VALID_NUMBER,
+    nestedBooleanField: VALID_BOOLEAN,
 });
 
-export const VALID_TEST_OBJECT: Readonly<TestSchema> = Object.freeze({
-    requiredField: "valid required field",
-    stringField: "valid string field",
-    numberField: 0,
-    booleanField: false,
+export const VALID_TEST_OBJECT = Object.freeze({
+    stringField: VALID_STRING,
+    numberField: VALID_NUMBER,
+    booleanField: VALID_BOOLEAN,
     objectField: VALID_NESTED_OBJECT,
-    lazyObjectField: VALID_NESTED_OBJECT,
-    lazyStringField: "valid lazy string field",
-    lazyNumberField: 0,
-    lazyBooleanField: false,
 });
