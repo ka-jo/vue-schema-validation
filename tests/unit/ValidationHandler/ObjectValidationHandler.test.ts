@@ -1,10 +1,10 @@
 import { expect } from "vitest";
-import { anything, instance, mock, verify, when } from "ts-mockito";
+import { anything, instance, reset, when } from "ts-mockito";
 
-import { ValidationHandler, ObjectValidationHandler } from "@/ValidationHandler";
+import { ObjectValidationHandler } from "@/ValidationHandler";
 import { Schema, SchemaValidationError } from "@/Schema";
 
-import { VALID_TEST_OBJECT, VALID_NESTED_OBJECT } from "tests/fixtures/valid-data";
+import { VALID_TEST_OBJECT } from "tests/fixtures/valid-data";
 import {
     DEFAULT_BOOLEAN,
     DEFAULT_NESTED_OBJECT,
@@ -13,67 +13,39 @@ import {
     DEFAULT_TEST_OBJECT,
 } from "tests/fixtures/default-data";
 import { INVALID_TEST_OBJECT } from "tests/fixtures/invalid-data";
+import {
+    objectSchemaMock,
+    booleanSchemaMock,
+    nestedObjectSchemaMock,
+    nestedNumberSchemaMock,
+    nestedBooleanSchemaMock,
+    numberSchemaMock,
+    stringSchemaMock,
+    nestedStringSchemaMock,
+    initializeObjectSchemaMock,
+} from "tests/fixtures/mocks/object-schema.mock";
 
 describe("ObjectValidationHandler", () => {
-    let schemaMock: Schema<"object">;
-    let stringSchemaMock: Schema<"primitive">;
-    let numberSchemaMock: Schema<"primitive">;
-    let booleanSchemaMock: Schema<"primitive">;
-    let objectSchemaMock: Schema<"object">;
-    let nestedStringSchemaMock: Schema<"primitive">;
-    let nestedNumberSchemaMock: Schema<"primitive">;
-    let nestedBooleanSchemaMock: Schema<"primitive">;
-
     beforeEach(() => {
-        schemaMock = mock<Schema<"object">>();
-        when(schemaMock.type).thenReturn("object");
-        when(schemaMock.defaultValue).thenReturn(DEFAULT_TEST_OBJECT);
+        initializeObjectSchemaMock();
+    });
 
-        stringSchemaMock = mock<Schema<"primitive">>();
-        when(stringSchemaMock.type).thenReturn("primitive");
-        when(stringSchemaMock.defaultValue).thenReturn(DEFAULT_STRING);
-
-        numberSchemaMock = mock<Schema<"primitive">>();
-        when(numberSchemaMock.type).thenReturn("primitive");
-        when(numberSchemaMock.defaultValue).thenReturn(DEFAULT_NUMBER);
-
-        booleanSchemaMock = mock<Schema<"primitive">>();
-        when(booleanSchemaMock.type).thenReturn("primitive");
-        when(booleanSchemaMock.defaultValue).thenReturn(DEFAULT_BOOLEAN);
-
-        objectSchemaMock = mock<Schema<"object">>();
-        when(objectSchemaMock.type).thenReturn("object");
-        when(objectSchemaMock.defaultValue).thenReturn(DEFAULT_NESTED_OBJECT);
-
-        nestedStringSchemaMock = mock<Schema<"primitive">>();
-        when(nestedStringSchemaMock.type).thenReturn("primitive");
-        when(nestedStringSchemaMock.defaultValue).thenReturn(DEFAULT_STRING);
-
-        nestedNumberSchemaMock = mock<Schema<"primitive">>();
-        when(nestedNumberSchemaMock.type).thenReturn("primitive");
-        when(nestedNumberSchemaMock.defaultValue).thenReturn(DEFAULT_NUMBER);
-
-        nestedBooleanSchemaMock = mock<Schema<"primitive">>();
-        when(nestedBooleanSchemaMock.type).thenReturn("primitive");
-        when(nestedBooleanSchemaMock.defaultValue).thenReturn(DEFAULT_BOOLEAN);
-
-        when(objectSchemaMock.fields).thenReturn({
-            nestedStringField: instance(nestedStringSchemaMock),
-            nestedNumberField: instance(nestedNumberSchemaMock),
-            nestedBooleanField: instance(nestedBooleanSchemaMock),
-        });
-
-        when(schemaMock.fields).thenReturn({
-            stringField: instance(stringSchemaMock),
-            numberField: instance(numberSchemaMock),
-            booleanField: instance(booleanSchemaMock),
-            objectField: instance(objectSchemaMock),
-        });
+    afterEach(() => {
+        reset<Schema>(
+            objectSchemaMock,
+            stringSchemaMock,
+            numberSchemaMock,
+            booleanSchemaMock,
+            nestedObjectSchemaMock,
+            nestedStringSchemaMock,
+            nestedNumberSchemaMock,
+            nestedBooleanSchemaMock
+        );
     });
 
     describe("value property", () => {
         it("should be a Vue ref", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.value).toBeVueRef();
         });
@@ -84,14 +56,14 @@ describe("ObjectValidationHandler", () => {
         // Enforcing readonly at runtime is not worth the overhead for an internal class,
         // so this is a type only test
         it("should be readonly", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             // @ts-expect-error
             handler.value = {} as any;
         });
 
         it("should be an object containing all schema fields", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.value.value).toEqual<TestSchema>({
                 stringField: expect.any(String),
@@ -103,7 +75,7 @@ describe("ObjectValidationHandler", () => {
 
         describe("initialization", () => {
             it("should initialize with provided value", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: VALID_TEST_OBJECT,
                 });
 
@@ -111,8 +83,8 @@ describe("ObjectValidationHandler", () => {
             });
 
             it("should initialize with schema default if no value provided", () => {
-                when(schemaMock.defaultValue).thenReturn(DEFAULT_TEST_OBJECT);
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                when(objectSchemaMock.defaultValue).thenReturn(DEFAULT_TEST_OBJECT);
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                 expect(handler.value.value).toEqual(DEFAULT_TEST_OBJECT);
             });
@@ -121,7 +93,7 @@ describe("ObjectValidationHandler", () => {
         describe("assignment", () => {
             describe("given a partial value", () => {
                 it("should merge provided value with schema default", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                         value: VALID_TEST_OBJECT,
                     });
 
@@ -139,17 +111,17 @@ describe("ObjectValidationHandler", () => {
 
                 // If the schema provides a partial default value, we should fall back to the schema defaults for the missing fields
                 it("should merge provided value with schema default and field defaults", () => {
-                    when(schemaMock.defaultValue).thenReturn({
+                    when(objectSchemaMock.defaultValue).thenReturn({
                         stringField: DEFAULT_STRING,
                     });
                     when(booleanSchemaMock.defaultValue).thenReturn(false);
-                    when(objectSchemaMock.defaultValue).thenReturn({
+                    when(nestedObjectSchemaMock.defaultValue).thenReturn({
                         nestedStringField: DEFAULT_STRING,
                     });
                     when(nestedNumberSchemaMock.defaultValue).thenReturn(555);
                     when(nestedBooleanSchemaMock.defaultValue).thenReturn(false);
 
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                         value: VALID_TEST_OBJECT,
                     });
 
@@ -172,18 +144,18 @@ describe("ObjectValidationHandler", () => {
                 // If the schema provides a partial default value (or no default value) and the field has no default value,
                 // the field value should be set to null
                 it("should result in null value if no schema default for field", () => {
-                    when(schemaMock.defaultValue).thenReturn({
+                    when(objectSchemaMock.defaultValue).thenReturn({
                         stringField: DEFAULT_STRING,
                     });
                     when(numberSchemaMock.defaultValue).thenReturn(undefined);
                     when(booleanSchemaMock.defaultValue).thenReturn(undefined);
-                    when(objectSchemaMock.defaultValue).thenReturn({
+                    when(nestedObjectSchemaMock.defaultValue).thenReturn({
                         nestedStringField: DEFAULT_STRING,
                     });
                     when(nestedNumberSchemaMock.defaultValue).thenReturn(undefined);
                     when(nestedBooleanSchemaMock.defaultValue).thenReturn(undefined);
 
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                         value: VALID_TEST_OBJECT,
                     });
 
@@ -206,7 +178,7 @@ describe("ObjectValidationHandler", () => {
 
             describe("given a complete value", () => {
                 it("should replace value with provided value", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                         value: VALID_TEST_OBJECT,
                     });
 
@@ -217,7 +189,7 @@ describe("ObjectValidationHandler", () => {
             });
 
             it("should net set isDirty for child fields that do not change", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: DEFAULT_TEST_OBJECT,
                 });
 
@@ -233,7 +205,7 @@ describe("ObjectValidationHandler", () => {
 
     describe("errors property", () => {
         it("should be a Vue ref", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.errors).toBeVueRef();
         });
@@ -243,14 +215,14 @@ describe("ObjectValidationHandler", () => {
         // Enforcing the property is readonly at runtime is not worth the overhead for an internal class,
         // so this is a type only test
         it("should be readonly", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             // @ts-expect-error
             handler.errors = {} as any;
         });
 
         it("should be an object containing all schema fields", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.errors.value).toMatchObject({
                 stringField: expect.toBeIterable(),
@@ -261,7 +233,7 @@ describe("ObjectValidationHandler", () => {
         });
 
         it("should contain iterable $root property", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.errors.value).toHaveProperty("$root", expect.toBeIterable());
         });
@@ -275,7 +247,7 @@ describe("ObjectValidationHandler", () => {
                 new SchemaValidationError(["number error"])
             );
 
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             handler.validate();
 
@@ -283,7 +255,7 @@ describe("ObjectValidationHandler", () => {
         });
 
         it("should initialize as an empty iterable", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.errors.value).toBeIterable([]);
         });
@@ -291,7 +263,7 @@ describe("ObjectValidationHandler", () => {
 
     describe("fields property", () => {
         it("should be an object containing all schema fields", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.fields).toEqual({
                 stringField: expect.toBeSchemaValidation(String),
@@ -302,7 +274,7 @@ describe("ObjectValidationHandler", () => {
         });
 
         it("should initialize nested object fields", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.fields.objectField.fields).toEqual({
                 nestedStringField: expect.toBeSchemaValidation(String),
@@ -314,7 +286,7 @@ describe("ObjectValidationHandler", () => {
         // Enforcing the property is readonly at runtime is not worth the overhead for an internal class,
         // so this is a type only test
         it("should be readonly", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             // @ts-expect-error
             handler.fields = {};
@@ -323,7 +295,7 @@ describe("ObjectValidationHandler", () => {
 
     describe("isValid property", () => {
         it("should be a Vue ref", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.isValid).toBeVueRef();
         });
@@ -333,20 +305,20 @@ describe("ObjectValidationHandler", () => {
         // Enforcing the property is readonly at runtime is not worth the overhead for an internal class,
         // so this is a type only test
         it("should be readonly", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             // @ts-expect-error
             handler.isValid = {} as any;
         });
 
         it("should initialize to false", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.isValid.value).toBe(false);
         });
 
         it("should be true if all fields are valid", () => {
-            when(schemaMock.validateRoot(anything(), anything())).thenReturn(true);
+            when(objectSchemaMock.validateRoot(anything(), anything())).thenReturn(true);
             when(stringSchemaMock.validate(anything(), anything())).thenReturn(true);
             when(numberSchemaMock.validate(anything(), anything())).thenReturn(true);
             when(booleanSchemaMock.validate(anything(), anything())).thenReturn(true);
@@ -354,7 +326,7 @@ describe("ObjectValidationHandler", () => {
             when(nestedNumberSchemaMock.validate(anything(), anything())).thenReturn(true);
             when(nestedBooleanSchemaMock.validate(anything(), anything())).thenReturn(true);
 
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                 value: VALID_TEST_OBJECT,
             });
 
@@ -364,7 +336,7 @@ describe("ObjectValidationHandler", () => {
         });
 
         it("should be false if any field is invalid", () => {
-            when(schemaMock.validateRoot(anything(), anything())).thenReturn(true);
+            when(objectSchemaMock.validateRoot(anything(), anything())).thenReturn(true);
             when(stringSchemaMock.validate(anything(), anything())).thenReturn(false);
             when(numberSchemaMock.validate(anything(), anything())).thenReturn(true);
             when(booleanSchemaMock.validate(anything(), anything())).thenReturn(true);
@@ -374,7 +346,7 @@ describe("ObjectValidationHandler", () => {
                 new SchemaValidationError(["nestedBooleanField error"])
             );
 
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                 value: VALID_TEST_OBJECT,
             });
 
@@ -387,26 +359,26 @@ describe("ObjectValidationHandler", () => {
 
     describe("isDirty property", () => {
         it("should be a Vue ref", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.isDirty).toBeVueRef();
         });
 
         it("should be readonly", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             // @ts-expect-error
             handler.isDirty = {} as any;
         });
 
         it("should initialize to false", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
             expect(handler.isDirty.value).toBe(false);
         });
 
         it("should be true if any field is dirty", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                 value: DEFAULT_TEST_OBJECT,
             });
 
@@ -423,7 +395,7 @@ describe("ObjectValidationHandler", () => {
     describe("validate method", () => {
         describe("given valid data", () => {
             beforeEach(() => {
-                when(schemaMock.validateRoot(VALID_TEST_OBJECT, anything())).thenReturn(true);
+                when(objectSchemaMock.validateRoot(VALID_TEST_OBJECT, anything())).thenReturn(true);
                 when(
                     stringSchemaMock.validate(VALID_TEST_OBJECT.stringField, anything())
                 ).thenReturn(true);
@@ -434,12 +406,12 @@ describe("ObjectValidationHandler", () => {
                     booleanSchemaMock.validate(VALID_TEST_OBJECT.booleanField, anything())
                 ).thenReturn(true);
                 when(
-                    objectSchemaMock.validate(VALID_TEST_OBJECT.objectField, anything())
+                    nestedObjectSchemaMock.validate(VALID_TEST_OBJECT.objectField, anything())
                 ).thenReturn(true);
             });
 
             it("should return true", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: VALID_TEST_OBJECT,
                 });
 
@@ -449,7 +421,7 @@ describe("ObjectValidationHandler", () => {
             });
 
             it("should set isValid to true", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: VALID_TEST_OBJECT,
                 });
 
@@ -459,7 +431,7 @@ describe("ObjectValidationHandler", () => {
             });
 
             it("should reset errors", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: VALID_TEST_OBJECT,
                 });
 
@@ -483,7 +455,7 @@ describe("ObjectValidationHandler", () => {
 
         describe("given invalid data", () => {
             beforeEach(() => {
-                when(schemaMock.validateRoot(anything(), anything())).thenThrow(
+                when(objectSchemaMock.validateRoot(anything(), anything())).thenThrow(
                     new SchemaValidationError(["root error"])
                 );
                 when(
@@ -496,7 +468,7 @@ describe("ObjectValidationHandler", () => {
                     booleanSchemaMock.validate(INVALID_TEST_OBJECT.booleanField, anything())
                 ).thenThrow(new SchemaValidationError(["booleanField error"]));
                 when(
-                    objectSchemaMock.validate(INVALID_TEST_OBJECT.objectField, anything())
+                    nestedObjectSchemaMock.validate(INVALID_TEST_OBJECT.objectField, anything())
                 ).thenThrow(new SchemaValidationError(["objectField error"]));
 
                 when(
@@ -520,7 +492,7 @@ describe("ObjectValidationHandler", () => {
             });
 
             it("should return false", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: INVALID_TEST_OBJECT,
                 });
 
@@ -530,7 +502,7 @@ describe("ObjectValidationHandler", () => {
             });
 
             it("should set isValid to false", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: INVALID_TEST_OBJECT,
                 });
 
@@ -540,7 +512,7 @@ describe("ObjectValidationHandler", () => {
             });
 
             it("should populate errors", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: INVALID_TEST_OBJECT,
                 });
 
@@ -565,7 +537,7 @@ describe("ObjectValidationHandler", () => {
                 new Error("unexpected")
             );
 
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                 value: VALID_TEST_OBJECT,
             });
 
@@ -578,7 +550,7 @@ describe("ObjectValidationHandler", () => {
     describe("reset method", () => {
         describe("given a value", () => {
             it("should reset handler value to provided value", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: INVALID_TEST_OBJECT,
                 });
 
@@ -589,7 +561,7 @@ describe("ObjectValidationHandler", () => {
 
             describe("when value is a partial object", () => {
                 it("should merge provided value with initial value", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                         value: INVALID_TEST_OBJECT,
                     });
 
@@ -609,7 +581,7 @@ describe("ObjectValidationHandler", () => {
 
         describe("given no value", () => {
             it("should reset handler value to initial value", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: VALID_TEST_OBJECT,
                 });
 
@@ -623,8 +595,8 @@ describe("ObjectValidationHandler", () => {
             });
 
             it("should reset handler value to schema default if no initial value", () => {
-                when(schemaMock.defaultValue).thenReturn(DEFAULT_TEST_OBJECT);
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                when(objectSchemaMock.defaultValue).thenReturn(DEFAULT_TEST_OBJECT);
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                 handler.reset();
 
@@ -633,7 +605,7 @@ describe("ObjectValidationHandler", () => {
         });
 
         it("should reset errors", () => {
-            when(schemaMock.validateRoot(anything(), anything())).thenThrow(
+            when(objectSchemaMock.validateRoot(anything(), anything())).thenThrow(
                 new SchemaValidationError(["root error"])
             );
             when(stringSchemaMock.validate(anything(), anything())).thenThrow(
@@ -655,7 +627,7 @@ describe("ObjectValidationHandler", () => {
                 new SchemaValidationError(["nestedBooleanField error"])
             );
 
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                 value: VALID_TEST_OBJECT,
             });
 
@@ -685,9 +657,9 @@ describe("ObjectValidationHandler", () => {
         });
 
         it("should set all fields' isValid to false", () => {
-            when(schemaMock.validate(anything(), anything())).thenReturn(true);
+            when(objectSchemaMock.validate(anything(), anything())).thenReturn(true);
 
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                 value: VALID_TEST_OBJECT,
             });
 
@@ -710,7 +682,7 @@ describe("ObjectValidationHandler", () => {
     describe("toReactive method", () => {
         describe("return value", () => {
             it("should be schema validation object", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                 const reactive = handler.toReactive();
 
@@ -719,7 +691,7 @@ describe("ObjectValidationHandler", () => {
 
             describe("errors property", () => {
                 it("should be readonly", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                     const reactive = handler.toReactive();
 
@@ -730,7 +702,7 @@ describe("ObjectValidationHandler", () => {
                 });
 
                 it("should have a property for each schema field", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                     const reactive = handler.toReactive();
 
@@ -743,7 +715,7 @@ describe("ObjectValidationHandler", () => {
                 });
 
                 it("should have readonly properties", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                     const reactive = handler.toReactive();
                     const originalErrors = reactive.errors;
@@ -757,7 +729,7 @@ describe("ObjectValidationHandler", () => {
 
             describe("fields property", () => {
                 it("should be readonly", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                     const reactive = handler.toReactive();
 
@@ -768,7 +740,7 @@ describe("ObjectValidationHandler", () => {
                 });
 
                 it("should have a property for each schema field", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                     const reactive = handler.toReactive();
 
@@ -781,7 +753,7 @@ describe("ObjectValidationHandler", () => {
                 });
 
                 it("should have readonly properties", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                     const reactive = handler.toReactive();
                     const originalFields = reactive.fields;
@@ -794,7 +766,7 @@ describe("ObjectValidationHandler", () => {
             });
 
             it("isValid property should be readonly", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                 const reactive = handler.toReactive();
 
@@ -805,7 +777,7 @@ describe("ObjectValidationHandler", () => {
             });
 
             it("isDirty property should be readonly", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                 const reactive = handler.toReactive();
 
@@ -822,14 +794,14 @@ describe("ObjectValidationHandler", () => {
         describe("given initial value", () => {
             it("should throw a TypeError if provided value is not an object", () => {
                 expect(() => {
-                    ObjectValidationHandler.create(instance(schemaMock), {
+                    ObjectValidationHandler.create(instance(objectSchemaMock), {
                         value: "not an object",
                     });
                 }).toThrow(TypeError);
             });
 
             it("should return an instance of ObjectValidationHandler with initial value", () => {
-                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: VALID_TEST_OBJECT,
                 });
 
