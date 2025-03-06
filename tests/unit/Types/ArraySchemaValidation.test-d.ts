@@ -33,10 +33,57 @@ describe("ArraySchemaValidation type", () => {
             thing.fields = {};
         });
 
-        it("should be of type ArraySchemaValidationFields of the correct type", () => {
+        // it("should be of type ArraySchemaValidationFields of the correct type", () => {
+        //     expectTypeOf<ArraySchemaValidation<number[]>>()
+        //         .toHaveProperty("fields")
+        //         .toEqualTypeOf<ArraySchemaValidationFields<number[]>>();
+        // });
+
+        it("should have number keys", () => {
             expectTypeOf<ArraySchemaValidation<number[]>>()
                 .toHaveProperty("fields")
-                .toEqualTypeOf<ArraySchemaValidationFields<number[]>>();
+                .toHaveProperty(0);
+        });
+
+        it("should be iterable", () => {
+            expectTypeOf<ArraySchemaValidation<number[]>>()
+                .toHaveProperty("fields")
+                .toMatchTypeOf<Iterable<SchemaValidation<number>>>();
+        });
+
+        it("should have readonly properties", () => {
+            const thing: ArraySchemaValidation<number[]> = {} as any;
+            //@ts-expect-error
+            thing.fields[0] = {} as any;
+        });
+
+        it("should have SchemaValidation properties of the same type as the ArraySchemaValidation array type", () => {
+            expectTypeOf<ArraySchemaValidation<number[]>>()
+                .toHaveProperty("fields")
+                .toHaveProperty(0)
+                .toEqualTypeOf<SchemaValidation<number>>();
+        });
+
+        it("should not have array methods that mutate the array", () => {
+            const thing: ArraySchemaValidation<number[]> = {} as any;
+            //@ts-expect-error
+            thing.fields.push(1);
+            //@ts-expect-error
+            thing.fields.pop();
+            //@ts-expect-error
+            thing.fields.shift();
+            //@ts-expect-error
+            thing.fields.unshift(1);
+            //@ts-expect-error
+            thing.fields.splice(0, 1);
+            //@ts-expect-error
+            thing.fields.sort();
+            //@ts-expect-error
+            thing.fields.reverse();
+            //@ts-expect-error
+            thing.fields.fill(1);
+            //@ts-expect-error
+            thing.fields.copyWithin(0, 1);
         });
     });
 

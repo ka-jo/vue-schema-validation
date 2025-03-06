@@ -15,7 +15,6 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     private _value: unknown;
 
     readonly errors: Ref<ReadonlyArray<string>>;
-    readonly fields: undefined;
     readonly isValid: Ref<boolean>;
     readonly isDirty: Ref<boolean>;
 

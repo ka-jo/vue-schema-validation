@@ -13,7 +13,7 @@ export interface ArraySchemaValidation<T extends Array<unknown> = Array<unknown>
      */
     readonly [HandlerInstance]: ValidationHandler<T>;
     value: T;
-    readonly fields: ReadonlyArray<SchemaValidation<T>>;
+    readonly fields: ReadonlyArray<SchemaValidation<ElementType<T>>>;
     readonly errors: ArraySchemaValidationErrors<T>;
 
     reset(value?: T): void;

@@ -86,15 +86,6 @@ export abstract class ValidationHandler<T = unknown> {
     abstract readonly errors: Ref<Iterable<string>>;
 
     /**
-     * Object containing the validation handlers for each field of the schema
-     * @remarks
-     * For object schemas, this will be an object with the same keys as the schema where each value is a {@link ValidationHandler}.
-     * For array schemas, this will be an object with numeric keys where each value is a {@link ValidationHandler}.
-     * For other schema types, this will be undefined
-     */
-    abstract readonly fields: ValidationHandlerFields<T>;
-
-    /**
      * Ref that tracks if the value was valid after the last call to validate
      * @remarks
      * This is only updated after a call to validate. Changing the {@link ValidationHandler.value ValidationHanlder's value} will not automatically update isValid

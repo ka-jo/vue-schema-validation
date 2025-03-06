@@ -23,6 +23,12 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
 
     readonly schema!: Schema<"object">;
     readonly errors: Ref<ObjectSchemaValidationErrors>;
+    /**
+     * Object containing the SchemaValidation instances for each field in the object
+     * @remarks
+     * This object should have the same keys as the object being validated where each value is a SchemaValidation instance,
+     * but for the purposes of this class, we don't care what keys are present — only that the values are SchemaValidation instances.
+     */
     readonly fields: Record<string, SchemaValidation>;
     readonly isValid: Ref<boolean>;
     readonly isDirty: Ref<boolean>;
