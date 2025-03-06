@@ -23,8 +23,9 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
 
     readonly schema!: Schema<"object">;
     readonly errors: Ref<ObjectSchemaValidationErrors>;
-    readonly isValid: Ref<boolean>;
     readonly fields: Record<string, SchemaValidation>;
+    readonly isValid: Ref<boolean>;
+    readonly isDirty: Ref<boolean>;
 
     constructor(
         schema: Schema<"object">,
@@ -38,8 +39,9 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
         this._value = reactive(value);
         this._rootErrors = ref([]);
         this.errors = ref(makeIterableErrorObject(errors, this._rootErrors));
-        this.isValid = computed(() => this.isRootValid() && this.areAllFieldsValid());
         this.fields = fields;
+        this.isValid = computed(() => this.isRootValid() && this.areAllFieldsValid());
+        this.isDirty = computed(() => this.isAnyFieldDirty());
     }
 
     validate(): boolean {
@@ -69,8 +71,9 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
             [HandlerInstance]: markRaw(this),
             value: this.value,
             errors: readonly(this.errors),
-            isValid: readonly(this.isValid),
             fields: shallowReadonly(ref(this.fields)),
+            isValid: readonly(this.isValid),
+            isDirty: readonly(this.isDirty),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
         };
@@ -119,6 +122,16 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
             }
         }
         return isValid;
+    }
+
+    private isAnyFieldDirty(): boolean {
+        for (const key of Object.keys(this.fields)) {
+            const field = this.fields[key];
+            if (field.isDirty) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private areAllFieldsValid(): boolean {

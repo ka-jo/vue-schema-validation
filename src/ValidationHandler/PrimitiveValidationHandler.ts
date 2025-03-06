@@ -15,8 +15,9 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
     private _value: unknown;
 
     readonly errors: Ref<ReadonlyArray<string>>;
-    readonly isValid: Ref<boolean>;
     readonly fields: undefined;
+    readonly isValid: Ref<boolean>;
+    readonly isDirty: Ref<boolean>;
 
     constructor(schema: Schema, options: ValidationHandlerOptions) {
         super(schema, options);
@@ -24,6 +25,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
         this._value = this.options.value ?? this.schema.defaultValue ?? null;
         this.errors = ref([]);
         this.isValid = ref(false);
+        this.isDirty = ref(false);
     }
 
     validate(): boolean {
@@ -46,6 +48,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
         this.setValue(value ?? this.options.value);
         this.errors.value = [];
         this.isValid.value = false;
+        this.isDirty.value = false;
     }
 
     toReactive(): PrimitiveSchemaValidation<unknown> {
@@ -55,6 +58,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
             value: this.value,
             errors: readonly(this.errors),
             isValid: readonly(this.isValid),
+            isDirty: readonly(this.isDirty),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
         };
@@ -71,8 +75,11 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
             // We should allow null values to be set, but we should not allow undefined values
             value = value ?? this.schema.defaultValue ?? null;
         }
-        this._value = value;
-        this._triggerValue();
+        if (value !== this._value) {
+            this._value = value;
+            this.isDirty.value = true;
+            this._triggerValue();
+        }
     }
 
     public static create(

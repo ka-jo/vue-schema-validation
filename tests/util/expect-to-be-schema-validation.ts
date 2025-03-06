@@ -9,10 +9,29 @@ expect.extend({
                 reset: expect.any(Function),
                 value: expectedValueType ? expect.any(expectedValueType) : expect.anything(),
                 errors: expect.toBeIterable(),
-                isValid: expect.any(Boolean),
                 fields: expectedValueType === Object ? expect.any(Object) : undefined,
+                isValid: expect.any(Boolean),
+                isDirty: expect.any(Boolean),
                 [HandlerInstance]: expect.any(ValidationHandler),
             });
+
+            expect(received).toBeReactive();
+
+            expect(() => {
+                received.errors = {};
+            }).toThrow();
+
+            expect(() => {
+                received.fields = {};
+            });
+
+            expect(() => {
+                received.isValid = {};
+            }).toThrow();
+
+            expect(() => {
+                received.isDirty = {};
+            }).toThrow();
         } catch (error: any) {
             return {
                 message: () => error.message,

@@ -57,17 +57,17 @@ describe("ObjectValidationHandler", () => {
         when(nestedBooleanSchemaMock.type).thenReturn("primitive");
         when(nestedBooleanSchemaMock.defaultValue).thenReturn(DEFAULT_BOOLEAN);
 
+        when(objectSchemaMock.fields).thenReturn({
+            nestedStringField: instance(nestedStringSchemaMock),
+            nestedNumberField: instance(nestedNumberSchemaMock),
+            nestedBooleanField: instance(nestedBooleanSchemaMock),
+        });
+
         when(schemaMock.fields).thenReturn({
             stringField: instance(stringSchemaMock),
             numberField: instance(numberSchemaMock),
             booleanField: instance(booleanSchemaMock),
             objectField: instance(objectSchemaMock),
-        });
-
-        when(objectSchemaMock.fields).thenReturn({
-            nestedStringField: instance(nestedStringSchemaMock),
-            nestedNumberField: instance(nestedNumberSchemaMock),
-            nestedBooleanField: instance(nestedBooleanSchemaMock),
         });
     });
 
@@ -215,6 +215,19 @@ describe("ObjectValidationHandler", () => {
                     expect(handler.value.value).toEqual(INVALID_TEST_OBJECT);
                 });
             });
+
+            it("should net set isDirty for child fields that do not change", () => {
+                const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                    value: DEFAULT_TEST_OBJECT,
+                });
+
+                handler.value.value = {
+                    ...VALID_TEST_OBJECT,
+                    stringField: DEFAULT_STRING,
+                };
+
+                expect(handler.fields.stringField.isDirty).toBe(false);
+            });
         });
     });
 
@@ -276,31 +289,6 @@ describe("ObjectValidationHandler", () => {
         });
     });
 
-    describe("isValid property", () => {
-        it("should be a Vue ref", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
-
-            expect(handler.isValid).toBeVueRef();
-        });
-
-        // Because we've established it's a ref by this point, test descriptions should read as if it's a regular property
-
-        // Enforcing the property is readonly at runtime is not worth the overhead for an internal class,
-        // so this is a type only test
-        it("should be readonly", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
-
-            // @ts-expect-error
-            handler.isValid = {} as any;
-        });
-
-        it("should initialize to false", () => {
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
-
-            expect(handler.isValid.value).toBe(false);
-        });
-    });
-
     describe("fields property", () => {
         it("should be an object containing all schema fields", () => {
             const handler = ObjectValidationHandler.create(instance(schemaMock), {});
@@ -330,6 +318,105 @@ describe("ObjectValidationHandler", () => {
 
             // @ts-expect-error
             handler.fields = {};
+        });
+    });
+
+    describe("isValid property", () => {
+        it("should be a Vue ref", () => {
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+            expect(handler.isValid).toBeVueRef();
+        });
+
+        // Because we've established it's a ref by this point, test descriptions should read as if it's a regular property
+
+        // Enforcing the property is readonly at runtime is not worth the overhead for an internal class,
+        // so this is a type only test
+        it("should be readonly", () => {
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+            // @ts-expect-error
+            handler.isValid = {} as any;
+        });
+
+        it("should initialize to false", () => {
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+            expect(handler.isValid.value).toBe(false);
+        });
+
+        it("should be true if all fields are valid", () => {
+            when(schemaMock.validateRoot(anything(), anything())).thenReturn(true);
+            when(stringSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(numberSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(booleanSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(nestedStringSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(nestedNumberSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(nestedBooleanSchemaMock.validate(anything(), anything())).thenReturn(true);
+
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                value: VALID_TEST_OBJECT,
+            });
+
+            handler.validate();
+
+            expect(handler.isValid.value).toBe(true);
+        });
+
+        it("should be false if any field is invalid", () => {
+            when(schemaMock.validateRoot(anything(), anything())).thenReturn(true);
+            when(stringSchemaMock.validate(anything(), anything())).thenReturn(false);
+            when(numberSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(booleanSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(nestedStringSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(nestedNumberSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(nestedBooleanSchemaMock.validate(anything(), anything())).thenThrow(
+                new SchemaValidationError(["nestedBooleanField error"])
+            );
+
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                value: VALID_TEST_OBJECT,
+            });
+
+            handler.validate();
+
+            expect(handler.fields.objectField.isValid).toBe(false);
+            expect(handler.isValid.value).toBe(false);
+        });
+    });
+
+    describe("isDirty property", () => {
+        it("should be a Vue ref", () => {
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+            expect(handler.isDirty).toBeVueRef();
+        });
+
+        it("should be readonly", () => {
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+            // @ts-expect-error
+            handler.isDirty = {} as any;
+        });
+
+        it("should initialize to false", () => {
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+            expect(handler.isDirty.value).toBe(false);
+        });
+
+        it("should be true if any field is dirty", () => {
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                value: DEFAULT_TEST_OBJECT,
+            });
+
+            handler.fields.objectField.value = {
+                nestedStringField: "new value",
+                nestedNumberField: DEFAULT_NUMBER,
+                nestedBooleanField: DEFAULT_BOOLEAN,
+            };
+            expect(handler.fields.objectField.isDirty).toBe(true);
+            expect(handler.isDirty.value).toBe(true);
         });
     });
 
@@ -545,22 +632,6 @@ describe("ObjectValidationHandler", () => {
             });
         });
 
-        it("should set isValid to false", () => {
-            when(schemaMock.validate(anything(), anything())).thenReturn(true);
-
-            const handler = ObjectValidationHandler.create(instance(schemaMock), {
-                value: VALID_TEST_OBJECT,
-            });
-
-            handler.validate();
-
-            expect(handler.isValid.value).toBe(true);
-
-            handler.reset();
-
-            expect(handler.isValid.value).toBe(false);
-        });
-
         it("should reset errors", () => {
             when(schemaMock.validateRoot(anything(), anything())).thenThrow(
                 new SchemaValidationError(["root error"])
@@ -612,6 +683,28 @@ describe("ObjectValidationHandler", () => {
                 objectField: expect.toBeIterable([]),
             });
         });
+
+        it("should set all fields' isValid to false", () => {
+            when(schemaMock.validate(anything(), anything())).thenReturn(true);
+
+            const handler = ObjectValidationHandler.create(instance(schemaMock), {
+                value: VALID_TEST_OBJECT,
+            });
+
+            handler.validate();
+
+            expect(handler.isValid.value).toBe(true);
+
+            handler.reset();
+
+            expect(handler.isValid.value).toBe(false);
+            expect(handler.fields.stringField.isValid).toBe(false);
+            expect(handler.fields.numberField.isValid).toBe(false);
+            expect(handler.fields.booleanField.isValid).toBe(false);
+            expect(handler.fields.objectField.isValid).toBe(false);
+        });
+
+        it("should set all fields' isDirty to false", () => {});
     });
 
     describe("toReactive method", () => {
@@ -622,6 +715,44 @@ describe("ObjectValidationHandler", () => {
                 const reactive = handler.toReactive();
 
                 expect(reactive).toBeSchemaValidation(Object);
+            });
+
+            describe("errors property", () => {
+                it("should be readonly", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(() => {
+                        //@ts-expect-error
+                        reactive.errors = {} as any;
+                    }).toThrow();
+                });
+
+                it("should have a property for each schema field", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(reactive.errors).toMatchObject({
+                        stringField: expect.toBeIterable(),
+                        numberField: expect.toBeIterable(),
+                        booleanField: expect.toBeIterable(),
+                        objectField: expect.toBeIterable(),
+                    });
+                });
+
+                it("should have readonly properties", () => {
+                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+
+                    const reactive = handler.toReactive();
+                    const originalErrors = reactive.errors;
+
+                    //@ts-expect-error
+                    reactive.errors.stringField = {} as any;
+
+                    expect(reactive.errors).toEqual(originalErrors);
+                });
             });
 
             describe("fields property", () => {
@@ -673,42 +804,15 @@ describe("ObjectValidationHandler", () => {
                 }).toThrow();
             });
 
-            describe("errors property", () => {
-                it("should be readonly", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
+            it("isDirty property should be readonly", () => {
+                const handler = ObjectValidationHandler.create(instance(schemaMock), {});
 
-                    const reactive = handler.toReactive();
+                const reactive = handler.toReactive();
 
-                    expect(() => {
-                        //@ts-expect-error
-                        reactive.errors = {} as any;
-                    }).toThrow();
-                });
-
-                it("should have a property for each schema field", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
-
-                    const reactive = handler.toReactive();
-
-                    expect(reactive.errors).toMatchObject({
-                        stringField: expect.toBeIterable(),
-                        numberField: expect.toBeIterable(),
-                        booleanField: expect.toBeIterable(),
-                        objectField: expect.toBeIterable(),
-                    });
-                });
-
-                it("should have readonly properties", () => {
-                    const handler = ObjectValidationHandler.create(instance(schemaMock), {});
-
-                    const reactive = handler.toReactive();
-                    const originalErrors = reactive.errors;
-
+                expect(() => {
                     //@ts-expect-error
-                    reactive.errors.stringField = {} as any;
-
-                    expect(reactive.errors).toEqual(originalErrors);
-                });
+                    reactive.isDirty = {} as any;
+                }).toThrow();
             });
         });
     });

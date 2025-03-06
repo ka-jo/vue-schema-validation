@@ -11,6 +11,7 @@ import { makeIterableErrorObject } from "@/common";
 
 export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     private _value: Array<unknown>;
+    private _rootErrors: Ref<ReadonlyArray<string>>;
 
     readonly errors: Ref<ArraySchemaValidationErrors>;
     readonly isValid: Ref<boolean>;
@@ -20,7 +21,8 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
         super(schema, options);
 
         this._value = options.value ?? schema.defaultValue ?? [];
-        this.errors = ref(makeIterableErrorObject({}));
+        this._rootErrors = ref([]);
+        this.errors = ref(makeIterableErrorObject({}, this._rootErrors));
         this.isValid = ref(false);
         this.fields = {};
     }

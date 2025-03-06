@@ -118,6 +118,14 @@ describe("PrimitiveValidationHandler", () => {
         });
     });
 
+    describe("fields property", () => {
+        it("should be undefined", () => {
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
+
+            expect(handler.fields).toBeUndefined();
+        });
+    });
+
     describe("isValid property", () => {
         it("should be a Vue ref", () => {
             const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
@@ -140,11 +148,24 @@ describe("PrimitiveValidationHandler", () => {
         });
     });
 
-    describe("fields property", () => {
-        it("should be undefined", () => {
+    describe("isDirty property", () => {
+        it("should be a Vue ref", () => {
             const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
-            expect(handler.fields).toBeUndefined();
+            expect(handler.isDirty).toBeVueRef();
+        });
+
+        it("should be readonly", () => {
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
+
+            // @ts-expect-error
+            handler.isDirty = false;
+        });
+
+        it("should initialize to false", () => {
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
+
+            expect(handler.isDirty.value).toBe(false);
         });
     });
 
@@ -309,89 +330,12 @@ describe("PrimitiveValidationHandler", () => {
     });
 
     describe("toReactive method", () => {
-        describe("return value", () => {
-            it("should be an object", () => {
-                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
+        it("should return a schema validation object", () => {
+            const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
 
-                const reactive = handler.toReactive();
+            const reactive = handler.toReactive();
 
-                expect(reactive).toBeTypeOf("object");
-            });
-
-            it("should be reactive", () => {
-                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
-
-                const reactive = handler.toReactive();
-
-                expect(reactive).toBeReactive();
-            });
-
-            it("should have HandlerInstance symbol property", () => {
-                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
-
-                const reactive = handler.toReactive();
-
-                expect(reactive[HandlerInstance]).toBeInstanceOf(PrimitiveValidationHandler);
-            });
-
-            it("should have value property", () => {
-                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
-
-                const reactive = handler.toReactive();
-
-                expect(reactive).toHaveProperty("value");
-                expect(reactive.value).toEqual(handler.value.value);
-            });
-
-            it("should have readonly errors property", () => {
-                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
-
-                const reactive = handler.toReactive();
-
-                expect(reactive).toHaveProperty("errors");
-                expect(reactive.errors).toEqual(handler.errors.value);
-                expect(() => {
-                    //@ts-expect-error
-                    reactive.errors = ["new error"];
-                }).toThrowError();
-            });
-
-            it("should not have fields property", () => {
-                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
-
-                const reactive = handler.toReactive();
-
-                expect(reactive).not.toHaveProperty("fields");
-            });
-
-            it("should have readonly isValid property", () => {
-                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
-
-                const reactive = handler.toReactive();
-
-                expect(reactive).toHaveProperty("isValid");
-                expect(reactive.isValid).toBe(handler.isValid.value);
-                expect(() => {
-                    //@ts-expect-error
-                    reactive.isValid = !handler.isValid.value;
-                }).toThrowError();
-            });
-
-            it("should have validate method", () => {
-                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
-
-                const reactive = handler.toReactive();
-
-                expect(reactive.validate).toBeInstanceOf(Function);
-            });
-
-            it("should have reset method", () => {
-                const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
-
-                const reactive = handler.toReactive();
-
-                expect(reactive.reset).toBeInstanceOf(Function);
-            });
+            expect(reactive).toBeSchemaValidation();
         });
     });
 });
