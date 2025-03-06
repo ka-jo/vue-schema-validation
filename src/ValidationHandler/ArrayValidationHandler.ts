@@ -46,13 +46,12 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
         this._rootErrors = ref([]);
         this._isRootDirty = ref(false);
         this._fieldsByValue = new Map();
-
-        this.initializeNewValue(options.value ?? schema.defaultValue ?? []);
-
         this.errors = ref(makeIterableErrorObject({}, this._rootErrors));
         this.fields = ref([]);
         this.isValid = computed(() => this.isRootValid() && this.areAllFieldsValid());
         this.isDirty = computed(() => this._isRootDirty.value && this.isAnyFieldDirty());
+
+        this.initializeNewValue(options.value ?? schema.defaultValue ?? []);
     }
 
     validate(): boolean {
@@ -64,8 +63,15 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
         return this.performFieldValidation() && isRootValid;
     }
 
-    reset(value?: unknown): void {
-        throw new Error("Method not implemented.");
+    reset(value?: Array<unknown>): void {
+        this._rootErrors.value = [];
+        this._isRootDirty.value = false;
+
+        this.setValue(value ?? this.options.value ?? this.schema.defaultValue ?? []);
+
+        for (const field of this.fields.value) {
+            field.reset();
+        }
     }
 
     toReactive(): ArraySchemaValidation<Array<unknown>> {
