@@ -45,14 +45,12 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
     }
 
     validate(): boolean {
-        let isValid = this.performRootValidation();
-        if (isValid === false && this.options.abortEarly) {
-            return isValid;
+        let isRootValid = this.performRootValidation();
+        if (isRootValid === false && this.options.abortEarly) {
+            return isRootValid;
         }
 
-        isValid = this.performFieldValidation() && isValid;
-
-        return isValid;
+        return this.performFieldValidation() && isRootValid;
     }
 
     reset(value: POJO = {}): void {
@@ -97,6 +95,7 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
     private performRootValidation(): boolean {
         try {
             this.schema.validateRoot(this._value, this.options);
+            this._rootErrors.value = [];
             return true;
         } catch (ex) {
             if (ex instanceof SchemaValidationError) {
@@ -116,9 +115,11 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
         let isValid = true;
         for (const key of Object.keys(this.fields)) {
             const field = this.fields[key];
-            isValid = field.validate();
-            if (isValid === false && this.options.abortEarly) {
-                break;
+            if (field.validate() === false) {
+                isValid = false;
+                if (this.options.abortEarly) {
+                    break;
+                }
             }
         }
         return isValid;
