@@ -1,6 +1,6 @@
 import { customRef, Ref } from "vue";
 
-import { DerivedSchemaType, Schema, SchemaType } from "@/Schema";
+import { Schema } from "@/Schema";
 import { ValidationOptions } from "@/Types/ValidationOptions";
 import { SchemaValidation } from "@/Types/SchemaValidation";
 import {
@@ -154,19 +154,6 @@ export abstract class ValidationHandler<T = unknown> {
         }
     }
 }
-
-/**
- * Type for the fields of a ValidationHandler. If generic type is an object or an array, this will be a record of {@link SchemaValidation} objects.
- * For non-object types, this will be undefined
- * @internal
- */
-export type ValidationHandlerFields<T> = T extends unknown
-    ? unknown
-    : T extends Array<any>
-    ? Record<number, SchemaValidation>
-    : T extends object
-    ? Record<string, SchemaValidation>
-    : undefined;
 
 /**
  * Type for the options passed to a ValidationHandler. This is the same as {@link ValidationOptions} but without the schema property.
