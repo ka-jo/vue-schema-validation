@@ -155,6 +155,18 @@ describe("ArraySchemaValidationErrors type", () => {
         thing[0] = "" as any;
     });
 
+    it("should have $root property", () => {
+        expectTypeOf<ArraySchemaValidationErrors<number[]>>()
+            .toHaveProperty("$root")
+            .toEqualTypeOf<ReadonlyArray<string>>();
+    });
+
+    it("should have readonly $root property", () => {
+        const thing: ArraySchemaValidationErrors<number[]> = {} as any;
+        //@ts-expect-error
+        thing.$root = [] as any;
+    });
+
     it("should have properties of type SchemaValidation[errors] of the same type as the array", () => {
         expectTypeOf<ArraySchemaValidationErrors<number[]>>()
             .toHaveProperty(0)

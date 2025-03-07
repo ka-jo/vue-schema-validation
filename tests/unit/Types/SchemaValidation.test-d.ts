@@ -61,6 +61,20 @@ describe("ISchemaValidation type", () => {
         });
     });
 
+    describe("isDirty property", () => {
+        it("should be readonly", () => {
+            expectTypeOf<ISchemaValidation>().pick("isDirty").not.toEqualTypeOf<{
+                set isDirty(value: boolean);
+            }>();
+        });
+
+        it("should be a boolean", () => {
+            expectTypeOf<ISchemaValidation>().pick("isDirty").toEqualTypeOf<{
+                readonly isDirty: boolean;
+            }>();
+        });
+    });
+
     describe("validate method", () => {
         it("should return a boolean", () => {
             expectTypeOf<ISchemaValidation>().toHaveProperty("validate").returns.toBeBoolean();

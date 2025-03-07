@@ -242,6 +242,18 @@ describe("ObjectSchemaValidationErrors type", () => {
         thing.numberField = [] as any;
     });
 
+    it("should have $root property", () => {
+        expectTypeOf<ObjectSchemaValidationErrors<TestSchema>>()
+            .toHaveProperty("$root")
+            .toEqualTypeOf<ReadonlyArray<string>>();
+    });
+
+    it("should have readonly $root property", () => {
+        const thing: ObjectSchemaValidationErrors<TestSchema> = {} as any;
+        // @ts-expect-error
+        thing.$root = [] as any;
+    });
+
     it("should have properties of type SchemaValidation[errors] of the correct type", () => {
         expectTypeOf<ObjectSchemaValidationErrors<TestSchema>>()
             .toHaveProperty("stringField")
