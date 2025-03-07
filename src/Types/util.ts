@@ -32,3 +32,9 @@ export type ElementType<T extends Array<unknown>> = T extends Array<infer U> ? U
  * @public
  */
 export type POJO = Record<string, any>;
+
+/**
+ * A type that removes readonly from all properties of an object
+ * @internal
+ */
+export type Writable<T> = { -readonly [P in keyof T]: T[P] };

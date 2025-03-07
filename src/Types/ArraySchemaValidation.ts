@@ -31,5 +31,7 @@ export type ArraySchemaValidationFields<T extends Array<unknown> = Array<unknown
  */
 export type ArraySchemaValidationErrors<T extends Array<unknown> = Array<unknown>> =
     Iterable<string> & {
+        readonly $root: ReadonlyArray<string>;
+    } & {
         readonly [i: number]: SchemaValidation<ElementType<T>>["errors"];
     };

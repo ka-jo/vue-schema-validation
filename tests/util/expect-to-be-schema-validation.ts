@@ -9,7 +9,10 @@ expect.extend({
                 reset: expect.any(Function),
                 value: expectedValueType ? expect.any(expectedValueType) : expect.anything(),
                 errors: expect.toBeIterable(),
-                fields: expectedValueType === Object ? expect.any(Object) : undefined,
+                fields:
+                    expectedValueType === Object || expectedValueType === Array
+                        ? expect.any(Object)
+                        : undefined,
                 isValid: expect.any(Boolean),
                 isDirty: expect.any(Boolean),
                 [HandlerInstance]: expect.any(ValidationHandler),
@@ -36,6 +39,8 @@ expect.extend({
             return {
                 message: () => error.message,
                 pass: false,
+                actual: error.actual,
+                expected: error.expected,
             };
         }
         return {

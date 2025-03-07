@@ -23,6 +23,7 @@ import {
     stringSchemaMock,
     nestedStringSchemaMock,
     initializeObjectSchemaMock,
+    resetObjectSchemaMock,
 } from "tests/fixtures/mocks/object-schema.mock";
 
 describe("ObjectValidationHandler", () => {
@@ -31,16 +32,7 @@ describe("ObjectValidationHandler", () => {
     });
 
     afterEach(() => {
-        reset<Schema>(
-            objectSchemaMock,
-            stringSchemaMock,
-            numberSchemaMock,
-            booleanSchemaMock,
-            nestedObjectSchemaMock,
-            nestedStringSchemaMock,
-            nestedNumberSchemaMock,
-            nestedBooleanSchemaMock
-        );
+        resetObjectSchemaMock();
     });
 
     describe("value property", () => {
@@ -188,7 +180,7 @@ describe("ObjectValidationHandler", () => {
                 });
             });
 
-            it("should net set isDirty for child fields that do not change", () => {
+            it("should not set isDirty for child fields that do not change", () => {
                 const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: DEFAULT_TEST_OBJECT,
                 });
@@ -317,14 +309,10 @@ describe("ObjectValidationHandler", () => {
             expect(handler.isValid.value).toBe(false);
         });
 
-        it("should be true if all fields are valid", () => {
-            when(objectSchemaMock.validateRoot(anything(), anything())).thenReturn(true);
-            when(stringSchemaMock.validate(anything(), anything())).thenReturn(true);
-            when(numberSchemaMock.validate(anything(), anything())).thenReturn(true);
-            when(booleanSchemaMock.validate(anything(), anything())).thenReturn(true);
-            when(nestedStringSchemaMock.validate(anything(), anything())).thenReturn(true);
-            when(nestedNumberSchemaMock.validate(anything(), anything())).thenReturn(true);
-            when(nestedBooleanSchemaMock.validate(anything(), anything())).thenReturn(true);
+        it("should be false if root is invalid", () => {
+            when(objectSchemaMock.validateRoot(anything(), anything())).thenThrow(
+                new SchemaValidationError(["root error"])
+            );
 
             const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                 value: VALID_TEST_OBJECT,
@@ -332,7 +320,7 @@ describe("ObjectValidationHandler", () => {
 
             handler.validate();
 
-            expect(handler.isValid.value).toBe(true);
+            expect(handler.isValid.value).toBe(false);
         });
 
         it("should be false if any field is invalid", () => {
@@ -354,6 +342,24 @@ describe("ObjectValidationHandler", () => {
 
             expect(handler.fields.objectField.isValid).toBe(false);
             expect(handler.isValid.value).toBe(false);
+        });
+
+        it("should be true if root is valid and all fields are valid", () => {
+            when(objectSchemaMock.validateRoot(anything(), anything())).thenReturn(true);
+            when(stringSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(numberSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(booleanSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(nestedStringSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(nestedNumberSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(nestedBooleanSchemaMock.validate(anything(), anything())).thenReturn(true);
+
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
+                value: VALID_TEST_OBJECT,
+            });
+
+            handler.validate();
+
+            expect(handler.isValid.value).toBe(true);
         });
     });
 
@@ -763,9 +769,19 @@ describe("ObjectValidationHandler", () => {
 
                     expect(reactive.fields).toEqual(originalFields);
                 });
+
+                it("should have writable nested properties", () => {
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    reactive.fields.stringField.value = "new string";
+
+                    expect(reactive.fields.stringField.value).toBe("new string");
+                });
             });
 
-            it("isValid property should be readonly", () => {
+            it("should have readonly isValid property", () => {
                 const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                 const reactive = handler.toReactive();
@@ -776,7 +792,7 @@ describe("ObjectValidationHandler", () => {
                 }).toThrow();
             });
 
-            it("isDirty property should be readonly", () => {
+            it("should have readonly isDirty property", () => {
                 const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
                 const reactive = handler.toReactive();

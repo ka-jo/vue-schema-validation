@@ -1,5 +1,5 @@
 import type { Schema } from "@/Schema";
-import { instance, mock, when } from "ts-mockito";
+import { instance, mock, reset, when } from "ts-mockito";
 import {
     DEFAULT_TEST_OBJECT,
     DEFAULT_STRING,
@@ -61,4 +61,17 @@ export function initializeObjectSchemaMock() {
         booleanField: instance(booleanSchemaMock),
         objectField: instance(nestedObjectSchemaMock),
     });
+}
+
+export function resetObjectSchemaMock() {
+    reset<Schema>(
+        objectSchemaMock,
+        stringSchemaMock,
+        numberSchemaMock,
+        booleanSchemaMock,
+        nestedObjectSchemaMock,
+        nestedStringSchemaMock,
+        nestedNumberSchemaMock,
+        nestedBooleanSchemaMock
+    );
 }
