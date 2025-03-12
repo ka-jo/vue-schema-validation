@@ -1,3 +1,4 @@
+import { Test } from "vitest";
 import { Ref } from "vue";
 
 /**
@@ -38,3 +39,5 @@ export type POJO = Record<string, any>;
  * @internal
  */
 export type Writable<T> = { -readonly [P in keyof T]: T[P] };
+
+export type Tuple = [...unknown[]] & { length: 1 };

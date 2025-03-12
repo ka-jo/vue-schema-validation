@@ -84,7 +84,7 @@ export abstract class Schema<T extends SchemaType = SchemaType> {
  * would be the case with Yup references for example.
  * @internal
  */
-export type SchemaType = "object" | "array" | "primitive" | "unknown";
+export type SchemaType = "object" | "array" | "tuple" | "primitive" | "unknown";
 
 /**
  * The type of the value being validated by a schema.
@@ -94,7 +94,7 @@ export type SchemaType = "object" | "array" | "primitive" | "unknown";
  */
 export type SchemaValue<T extends SchemaType> = T extends "object"
     ? Record<string, unknown>
-    : T extends "array"
+    : T extends "array" | "tuple"
     ? Array<unknown>
     : T extends "unknown"
     ? undefined
@@ -105,7 +105,7 @@ export type SchemaValue<T extends SchemaType> = T extends "object"
  */
 export type SchemaDefaultValue<T extends SchemaType> = T extends "object"
     ? Record<string, unknown>
-    : T extends "array"
+    : T extends "array" | "tuple"
     ? Array<unknown>
     : unknown;
 
@@ -117,6 +117,8 @@ export type SchemaFields<T extends SchemaType> = T extends "object"
     ? Record<string, Schema>
     : T extends "array"
     ? Schema
+    : T extends "tuple"
+    ? Record<number, Schema>
     : undefined;
 
 /**

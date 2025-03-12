@@ -52,15 +52,14 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
 
     toReactive(): PrimitiveSchemaValidation<unknown> {
         // for some reason, trying to create this object inline with the call to reactive will throw TypeScript compiler errors
-        const facade = {
-            [HandlerInstance]: markRaw(this),
+        const facade = this.brandHandlerInstance({
             value: this.value,
             errors: readonly(this.errors),
             isValid: readonly(this.isValid),
             isDirty: readonly(this.isDirty),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
-        };
+        });
         return reactive(facade);
     }
 

@@ -8,7 +8,7 @@ import type {
     ObjectSchemaValidation,
     ObjectSchemaValidationErrors,
 } from "@/Types/ObjectSchemaValidation";
-import { HandlerInstance, makeIterableErrorObject } from "@/common";
+import { HandlerInstance, makeIterableErrorObjectWithRoot } from "@/common";
 
 /**
  * Validation handler implementation for object schemas
@@ -44,7 +44,7 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
 
         this._value = reactive(value);
         this._rootErrors = ref([]);
-        this.errors = ref(makeIterableErrorObject(errors, this._rootErrors));
+        this.errors = ref(makeIterableErrorObjectWithRoot(errors, this._rootErrors));
         this.fields = fields;
         this.isValid = computed(() => this.isRootValid() && this.areAllFieldsValid());
         this.isDirty = computed(() => this.isAnyFieldDirty());
@@ -71,8 +71,7 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
     }
 
     toReactive(): ObjectSchemaValidation<POJO> {
-        const facade = {
-            [HandlerInstance]: markRaw(this),
+        const facade = this.brandHandlerInstance({
             value: this.value,
             errors: readonly(this.errors),
             fields: shallowReadonly(ref(this.fields)),
@@ -80,7 +79,7 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
             isDirty: readonly(this.isDirty),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
-        };
+        });
         return reactive(facade);
     }
 

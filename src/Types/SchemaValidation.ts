@@ -2,6 +2,7 @@ import { HandlerInstance } from "@/common";
 import { ArraySchemaValidation } from "@/Types/ArraySchemaValidation";
 import { ObjectSchemaValidation } from "@/Types/ObjectSchemaValidation";
 import { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
+import { TupleSchemaValidation } from "@/Types/TupleSchemaValidation";
 import { ValidationHandler } from "@/ValidationHandler";
 
 /**
@@ -13,7 +14,11 @@ import { ValidationHandler } from "@/ValidationHandler";
  * @public
  */
 export type SchemaValidation<T = unknown> = T extends Array<any>
-    ? ArraySchemaValidation<T>
+    ? // A tuple will have a fixed length and so the type of its length property will be a specific number
+      // If the length property is of type `number`, then it's not fixed length and therefore not a tuple
+      number extends T["length"]
+        ? ArraySchemaValidation<T>
+        : TupleSchemaValidation<T>
     : T extends object
     ? ObjectSchemaValidation<T>
     : unknown extends T

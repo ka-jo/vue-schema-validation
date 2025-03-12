@@ -1,8 +1,4 @@
-import {
-    ArraySchemaValidation,
-    ArraySchemaValidationErrors,
-    ArraySchemaValidationFields,
-} from "@/Types/ArraySchemaValidation";
+import { ArraySchemaValidation, ArraySchemaValidationErrors } from "@/Types/ArraySchemaValidation";
 import { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
 import { ValidationHandler } from "@/ValidationHandler";
 import { HandlerInstance } from "@/common";
@@ -32,12 +28,6 @@ describe("ArraySchemaValidation type", () => {
             //@ts-expect-error
             thing.fields = {};
         });
-
-        // it("should be of type ArraySchemaValidationFields of the correct type", () => {
-        //     expectTypeOf<ArraySchemaValidation<number[]>>()
-        //         .toHaveProperty("fields")
-        //         .toEqualTypeOf<ArraySchemaValidationFields<number[]>>();
-        // });
 
         it("should have number keys", () => {
             expectTypeOf<ArraySchemaValidation<number[]>>()
@@ -121,24 +111,6 @@ describe("ArraySchemaValidation type", () => {
                     .toBeCallableWith([1, 2, 3]);
             });
         });
-    });
-});
-
-describe("ArraySchemaValidationFields type", () => {
-    it("should have number keys", () => {
-        expectTypeOf<ArraySchemaValidationFields<number[]>>().toHaveProperty(0);
-    });
-
-    it("should have readonly properties", () => {
-        const thing: ArraySchemaValidationFields<number[]> = {} as any;
-        //@ts-expect-error
-        thing[0] = {} as any;
-    });
-
-    it("should have SchemaValidation properties of the same type as the ArraySchemaValidation array type", () => {
-        expectTypeOf<ArraySchemaValidationFields<number[]>>()
-            .toHaveProperty(0)
-            .toEqualTypeOf<SchemaValidation<number>>();
     });
 });
 

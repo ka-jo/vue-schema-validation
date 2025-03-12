@@ -1,13 +1,15 @@
-import { customRef, Ref } from "vue";
+import { customRef, markRaw, reactive, readonly, ref, Ref, shallowReadonly } from "vue";
 
 import { Schema } from "@/Schema";
 import { ValidationOptions } from "@/Types/ValidationOptions";
-import { SchemaValidation } from "@/Types/SchemaValidation";
+import { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
 import {
     ArrayValidationHandler,
     ObjectValidationHandler,
     PrimitiveValidationHandler,
+    TupleValidationHandler,
 } from "@/ValidationHandler";
+import { HandlerInstance } from "@/common";
 
 /**
  * Base class for managing validation state for a value
@@ -122,7 +124,7 @@ export abstract class ValidationHandler<T = unknown> {
      * @remarks
      * This is the end product of the initialization process and what is intended to be used by the consumer.
      */
-    abstract toReactive(): SchemaValidation<T>;
+    abstract toReactive(): ISchemaValidation;
 
     constructor(schema: Schema, options: ValidationHandlerOptions<T>) {
         this.schema = schema;
@@ -141,12 +143,35 @@ export abstract class ValidationHandler<T = unknown> {
         });
     }
 
-    public static create(schema: Schema, options: ValidationHandlerOptions): ValidationHandler {
+    /**
+     * Defines the handler instance on an object
+     * @param obj - Object to define the handler instance on
+     * @returns The object with the handler instance defined
+     * @remarks
+     * We don't want the handler instance to be enumerable, so we use Object.defineProperty to define it.
+     */
+    protected brandHandlerInstance<THandler extends ValidationHandler<T>, TObj>(
+        this: THandler,
+        obj: TObj
+    ): TObj & { [HandlerInstance]: THandler } {
+        return Object.defineProperty(obj, HandlerInstance, {
+            value: markRaw(this),
+            writable: false,
+            enumerable: false,
+        }) as TObj & { [HandlerInstance]: THandler };
+    }
+
+    public static create(
+        schema: Schema,
+        options: ValidationHandlerOptions
+    ): ValidationHandler<any> {
         switch (schema.type) {
             case "array":
                 return ArrayValidationHandler.create(schema as Schema<"array">, options);
             case "object":
                 return ObjectValidationHandler.create(schema as Schema<"object">, options);
+            case "tuple":
+                return TupleValidationHandler.create(schema as Schema<"tuple">, options);
             case "primitive":
             case "unknown":
             default:

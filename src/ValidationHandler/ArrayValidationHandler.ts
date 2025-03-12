@@ -7,7 +7,7 @@ import type {
     ArraySchemaValidation,
     ArraySchemaValidationErrors,
 } from "@/Types/ArraySchemaValidation";
-import { ErrorObject, HandlerInstance, makeIterableErrorObject } from "@/common";
+import { ErrorObjectWithRoot, HandlerInstance, makeIterableErrorObjectWithRoot } from "@/common";
 import { SchemaValidationError } from "@/Schema";
 import { ReadonlyRef, Writable } from "@/Types/util";
 
@@ -37,7 +37,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     private _fieldsByValue?: Map<unknown, SchemaValidation>;
 
     readonly schema!: Schema<"array">;
-    readonly errors: Ref<ArraySchemaValidationErrors, ErrorObject>;
+    readonly errors: Ref<ArraySchemaValidationErrors, ErrorObjectWithRoot>;
     readonly fields: Ref<ReadonlyArray<SchemaValidation>>;
     readonly isValid: ReadonlyRef<boolean>;
     readonly isDirty: ReadonlyRef<boolean>;
@@ -51,7 +51,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
         if (this.schema.fields.type !== "primitive") {
             this._fieldsByValue = new Map();
         }
-        this.errors = ref(makeIterableErrorObject({}, this._rootErrors));
+        this.errors = ref(makeIterableErrorObjectWithRoot({}, this._rootErrors));
         this.fields = ref([]);
         this.isValid = computed(() => this._isRootValid.value && this.areAllFieldsValid());
         this.isDirty = computed(() => this._isRootDirty.value || this.isAnyFieldDirty());
@@ -80,8 +80,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     }
 
     toReactive(): ArraySchemaValidation<Array<unknown>> {
-        const facade = {
-            [HandlerInstance]: markRaw(this),
+        const facade = this.brandHandlerInstance({
             value: this.value,
             errors: readonly(this.errors),
             fields: shallowReadonly(this.fields),
@@ -89,7 +88,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
             isDirty: readonly(this.isDirty),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
-        };
+        });
         return reactive(facade);
     }
 
@@ -109,7 +108,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     private initializeNewValue(value: Array<unknown>) {
         const newValue = new Array<unknown>();
         const fields = new Array<SchemaValidation>();
-        const errors = makeIterableErrorObject({}, this._rootErrors);
+        const errors = makeIterableErrorObjectWithRoot({}, this._rootErrors);
 
         for (let i = 0; i < value.length; i++) {
             const el = value[i];

@@ -216,9 +216,19 @@ describe("ObjectSchemaValidationFields type", () => {
             .toHaveProperty("objectField")
             .toEqualTypeOf<SchemaValidation<NestedObject>>();
     });
+
+    it("should have readonly properties", () => {
+        const thing: ObjectSchemaValidationFields<TestSchema> = {} as any;
+        // @ts-expect-error
+        thing.numberField = {} as any;
+    });
 });
 
 describe("ObjectSchemaValidationErrors type", () => {
+    it("should be Iterable<string>", () => {
+        expectTypeOf<ObjectSchemaValidationErrors<TestSchema>>().toMatchTypeOf<Iterable<string>>();
+    });
+
     it("should have a property for each key in the generic type", () => {
         expectTypeOf<ObjectSchemaValidationErrors<TestSchema>>().toHaveProperty("numberField");
         expectTypeOf<ObjectSchemaValidationErrors<TestSchema>>().toHaveProperty("stringField");

@@ -3,12 +3,12 @@ import {
     Schema as yup_Schema,
     ObjectSchema as yup_ObjectSchema,
     ArraySchema as yup_ArraySchema,
+    TupleSchema as yup_TupleSchema,
     LazySchema as yup_LazySchema,
     Reference as yup_Reference,
     ValidationError as yup_ValidationError,
 } from "yup";
 
-import { ValidationOptions } from "@/Types/ValidationOptions";
 import {
     Schema,
     SchemaFields,
@@ -88,6 +88,18 @@ export class YupSchema<T extends SchemaType = SchemaType> extends Schema<T> {
             return new YupSchema("array", schema, fields);
         }
 
+        if (YupSchema.isTupleSchema(schema)) {
+            const fields: Record<number, Schema> = {};
+            //@ts-ignore: I think the yup types for TupleSchemaSpec are wrong. Based on my experiments, it's actually an array, but is typed as a Record
+            const innerTypes: Array<yup_ISchema> = schema.spec.types;
+
+            for (let i = 0; i < innerTypes.length; i++) {
+                fields[i] = YupSchema.create(innerTypes[i]);
+            }
+
+            return new YupSchema("tuple", schema, fields);
+        }
+
         if (YupSchema.isLazySchema(schema)) {
             // based on my experiments, you don't actually need a value to resolve a lazy schema
             schema = schema.resolve({ value: undefined });
@@ -117,6 +129,10 @@ export class YupSchema<T extends SchemaType = SchemaType> extends Schema<T> {
         schema: yup_ReferenceOrSchema
     ): schema is yup_ArraySchema<any, any> {
         return "type" in schema && schema.type === "array";
+    }
+
+    private static isTupleSchema(schema: yup_ReferenceOrSchema): schema is yup_TupleSchema<any> {
+        return "type" in schema && schema.type === "tuple";
     }
 
     private static isLazySchema(schema: yup_ReferenceOrSchema): schema is yup_LazySchema<any> {
