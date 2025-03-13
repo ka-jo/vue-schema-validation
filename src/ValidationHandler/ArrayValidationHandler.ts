@@ -12,17 +12,7 @@ import { SchemaValidationError } from "@/Schema";
 import { ReadonlyRef, Writable } from "@/Types/util";
 
 export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
-    /**
-     * The value of the array being validated
-     * @remarks
-     * This should contain the values from each SchemaValidation instance in the fields array.
-     * It's important that this array only ever contain proxies from Vue (when validating non-primitive types), so that
-     * the values are reaactive and subsequent calls to setValue always have the same reference to the value in the fields array.
-     * Consider when a new object is added to the array: the first time the value is added, setValue will get a reference
-     * to a raw object before it is made reactive.
-     */
-    private _value!: Array<unknown>;
-    private _stopValueWatcher!: () => void;
+    private _stopValueWatcher: () => void = () => {};
     private _rootErrors: Ref<ReadonlyArray<string>>;
     private _isRootValid: Ref<boolean>;
     private _isRootDirty: Ref<boolean>;
@@ -36,6 +26,14 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
      */
     private _fieldsByValue?: Map<unknown, SchemaValidation>;
 
+    /**
+     * The reactive value of the array
+     * @remarks
+     * Unlike other ValidationHandler implementations, the value of an array is a computed ref to ensure
+     * that the value is always in sync with the fields. When the value of a field is changed through the
+     * fields property of an ArrayValidationhandler, the value of the array should be updated as well.
+     */
+    readonly value: Ref<Array<unknown>>;
     readonly schema!: Schema<"array">;
     readonly errors: Ref<ArraySchemaValidationErrors, ErrorObjectWithRoot>;
     readonly fields: Ref<ReadonlyArray<SchemaValidation>>;
@@ -51,6 +49,10 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
         if (this.schema.fields.type !== "primitive") {
             this._fieldsByValue = new Map();
         }
+        this.value = computed({
+            get: this.getValue.bind(this),
+            set: this.setValue.bind(this),
+        });
         this.errors = ref(makeIterableErrorObjectWithRoot({}, this._rootErrors));
         this.fields = ref([]);
         this.isValid = computed(() => this._isRootValid.value && this.areAllFieldsValid());
@@ -94,41 +96,44 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     }
 
     protected getValue(): Array<unknown> {
-        this._trackValue();
-        return this._value;
+        let value = [];
+        for (let i = 0; i < this.fields.value.length; i++) {
+            value.push(this.fields.value[i].value);
+        }
+        value = reactive(value);
+        this._stopValueWatcher();
+        this._stopValueWatcher = watch(value, (val) => this.setValue(val), {
+            deep: false,
+            flush: "sync",
+        });
+        return value;
     }
 
     protected setValue(value: Array<unknown>) {
         this._isRootDirty.value = true;
-        this._stopValueWatcher();
         this.initializeNewValue(value);
-        this._triggerValue();
         this.requestCleanFieldMap();
     }
 
     private initializeNewValue(value: Array<unknown>) {
-        const newValue = new Array<unknown>();
         const fields = new Array<SchemaValidation>();
         const errors = makeIterableErrorObjectWithRoot({}, this._rootErrors);
 
         for (let i = 0; i < value.length; i++) {
             const el = value[i];
             const field = this.getOrCreateField(el);
-
-            newValue.push(field.value);
+            const fieldHandler = field[HandlerInstance];
             fields.push(field);
-            errors[i] = field[HandlerInstance].errors;
+            errors[i] = fieldHandler.errors;
         }
 
-        this._value = reactive(newValue);
         this.fields.value = fields;
         this.errors.value = errors;
-        this._stopValueWatcher = watch(this._value, (val) => this.setValue(val), { deep: false });
     }
 
     private performRootValidation(): boolean {
         try {
-            this.schema.validateRoot(this._value, this.options);
+            this.schema.validateRoot(this.value.value, this.options);
             this._rootErrors.value = [];
             this._isRootValid.value = true;
             return true;
@@ -196,6 +201,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
                 ...this.options,
                 value,
             }).toReactive();
+            this._fieldsByValue!.set(field.value, field);
         }
         return field;
     }

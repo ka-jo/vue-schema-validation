@@ -138,10 +138,12 @@ describe("ArrayValidationHandler", () => {
                 const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
                     value: ["1", "2"],
                 });
-                const fieldTwo = handler.fields.value[1];
+
+                expect(handler.fields.value).toHaveLength(2);
+
                 handler.value.value = ["2"];
 
-                expect(handler.fields.value).toEqual([fieldTwo]);
+                expect(handler.fields.value).toHaveLength(1);
             });
 
             it("should create new properties in errors object when adding values", () => {
@@ -186,6 +188,103 @@ describe("ArrayValidationHandler", () => {
 
                 expect(handler.fields.value[0].isDirty).toBe(false);
             });
+        });
+
+        describe("mutation", () => {
+            it("should update value", () => {
+                const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {});
+
+                handler.value.value.push(VALID_STRING);
+
+                expect(handler.value.value).toEqual([VALID_STRING]);
+            });
+
+            it("should create new field references when adding primitive values", () => {
+                const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
+                    value: ["1"],
+                });
+
+                expect(handler.fields.value).not.toHaveProperty("1");
+
+                handler.value.value.push("2");
+
+                let one = handler.value.value[0];
+                let two = handler.value.value[1];
+
+                expect(handler.fields.value).toHaveProperty(
+                    "1",
+                    expect.toBeSchemaValidation(String)
+                );
+            });
+
+            it("should create new field references when adding object values", () => {
+                resetObjectSchemaMock();
+                initializeObjectSchemaMock();
+                when(arraySchemaMock.fields).thenReturn(instance(objectSchemaMock));
+                const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {});
+
+                handler.value.value.push({});
+
+                expect(handler.fields.value).toEqual([expect.toBeSchemaValidation(Object)]);
+                expect(handler.fields.value[0].value).toEqual(DEFAULT_TEST_OBJECT);
+            });
+
+            it("should remove field references when removing values", () => {
+                const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
+                    value: ["1", "2"],
+                });
+
+                expect(handler.fields.value).toHaveLength(2);
+
+                handler.value.value.pop();
+
+                expect(handler.fields.value).toHaveLength(1);
+            });
+
+            it("should create new properties in errors object when adding values", () => {
+                const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
+                    value: [VALID_STRING],
+                });
+
+                expect(handler.errors.value).not.toHaveProperty("1");
+
+                handler.value.value.push("1", "2");
+
+                expect(handler.errors.value).toMatchObject({
+                    0: [],
+                    1: [],
+                });
+            });
+
+            it("should remove properties from errors object when removing values", () => {
+                const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
+                    value: [VALID_STRING, VALID_STRING],
+                });
+
+                expect(handler.errors.value).toHaveProperty("1");
+
+                handler.value.value.pop();
+
+                expect(handler.errors.value).not.toHaveProperty("1");
+            });
+
+            it("should set isDirty to true", () => {
+                const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {});
+
+                handler.value.value.push(VALID_STRING);
+
+                expect(handler.isDirty.value).toBe(true);
+            });
+        });
+
+        it("should be updated when fields are updated", () => {
+            const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
+                value: [VALID_STRING],
+            });
+
+            handler.fields.value[0].value = VALID_NUMBER;
+
+            expect(handler.value.value).toEqual([VALID_NUMBER]);
         });
     });
 

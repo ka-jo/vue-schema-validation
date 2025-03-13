@@ -73,7 +73,7 @@ export abstract class ValidationHandler<T = unknown> {
      * This is a computed ref created by the ValidationHandler super class and uses the {@link ValidationHandler.getValue getValue} and
      * {@link ValidationHandler.setValue setValue} methods implemented by the subclass.
      */
-    readonly value: Ref<T>;
+    readonly value!: Ref<T>;
 
     /**
      * Ref for errors encountered during validation
@@ -129,7 +129,11 @@ export abstract class ValidationHandler<T = unknown> {
     constructor(schema: Schema, options: ValidationHandlerOptions<T>) {
         this.schema = schema;
         this.options = options;
-        this.value = this.initializeValue();
+        // Not a huge fan of this, but in order for array values to stay in sync when an element
+        // value is changed from one of its fields, the value ref should be a computed for arrays.
+        if (schema.type !== "array") {
+            this.value = this.initializeValue();
+        }
     }
 
     private initializeValue(): Ref<T> {
