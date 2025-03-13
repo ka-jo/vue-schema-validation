@@ -3,33 +3,32 @@ import { anything, instance, mock, when } from "ts-mockito";
 import { ArrayValidationHandler } from "@/ValidationHandler";
 import { Schema, SchemaValidationError } from "@/Schema";
 import {
+    initializeArraySchemaMock,
+    resetArraySchemaMock,
+    arraySchemaMock,
+    stringSchemaMock,
+} from "tests/fixtures/mocks/array-schema.mock";
+import {
+    initializeObjectSchemaMock,
+    resetObjectSchemaMock,
+    objectSchemaMock,
+} from "tests/fixtures/mocks/object-schema.mock";
+import { DEFAULT_STRING, DEFAULT_TEST_OBJECT } from "tests/fixtures/default-data";
+import { INVALID_STRING } from "tests/fixtures/invalid-data";
+import {
     VALID_BOOLEAN,
     VALID_NUMBER,
     VALID_STRING,
     VALID_TEST_OBJECT,
 } from "tests/fixtures/valid-data";
-import {
-    initializeObjectSchemaMock,
-    objectSchemaMock,
-    resetObjectSchemaMock,
-} from "tests/fixtures/mocks/object-schema.mock";
-import { DEFAULT_STRING, DEFAULT_TEST_OBJECT } from "tests/fixtures/default-data";
-import { INVALID_STRING } from "tests/fixtures/invalid-data";
 
 describe("ArrayValidationHandler", () => {
-    let arraySchemaMock: Schema<"array">;
-    let stringFieldSchemaMock: Schema<"primitive">;
-
     beforeEach(() => {
-        arraySchemaMock = mock<Schema<"array">>();
-        when(arraySchemaMock.type).thenReturn("array");
-        when(arraySchemaMock.defaultValue).thenReturn([]);
+        initializeArraySchemaMock();
+    });
 
-        stringFieldSchemaMock = mock<Schema<"primitive">>();
-        when(stringFieldSchemaMock.type).thenReturn("primitive");
-        when(stringFieldSchemaMock.defaultValue).thenReturn(VALID_STRING);
-
-        when(arraySchemaMock.fields).thenReturn(instance(stringFieldSchemaMock));
+    afterEach(() => {
+        resetArraySchemaMock();
     });
 
     describe("value property", () => {
@@ -302,7 +301,7 @@ describe("ArrayValidationHandler", () => {
         });
 
         it("should have number keys with field errors as value", () => {
-            when(stringFieldSchemaMock.validate(INVALID_STRING, anything())).thenThrow(
+            when(stringSchemaMock.validate(INVALID_STRING, anything())).thenThrow(
                 new SchemaValidationError(["field error"])
             );
             const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
@@ -318,7 +317,7 @@ describe("ArrayValidationHandler", () => {
         });
 
         it("should be iterable for all field errors", () => {
-            when(stringFieldSchemaMock.validate(INVALID_STRING, anything())).thenThrow(
+            when(stringSchemaMock.validate(INVALID_STRING, anything())).thenThrow(
                 new SchemaValidationError(["field error"])
             );
             const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
@@ -376,7 +375,7 @@ describe("ArrayValidationHandler", () => {
         });
 
         it("should be false if any field is invalid", () => {
-            when(stringFieldSchemaMock.validate(INVALID_STRING, anything())).thenThrow(
+            when(stringSchemaMock.validate(INVALID_STRING, anything())).thenThrow(
                 new SchemaValidationError(["field error"])
             );
             const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
@@ -390,7 +389,7 @@ describe("ArrayValidationHandler", () => {
 
         it("should be true if root is valid and all fields are valid", () => {
             when(arraySchemaMock.validateRoot(anything(), anything())).thenReturn(true);
-            when(stringFieldSchemaMock.validate(anything(), anything())).thenReturn(true);
+            when(stringSchemaMock.validate(anything(), anything())).thenReturn(true);
             const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
                 value: [VALID_STRING, VALID_NUMBER, VALID_BOOLEAN],
             });
@@ -438,12 +437,12 @@ describe("ArrayValidationHandler", () => {
         describe("given valid data", () => {
             beforeEach(() => {
                 when(arraySchemaMock.validateRoot(anything(), anything())).thenReturn(true);
-                when(stringFieldSchemaMock.validate(anything(), anything())).thenReturn(true);
+                when(stringSchemaMock.validate(anything(), anything())).thenReturn(true);
             });
 
             it("should return true", () => {
                 when(arraySchemaMock.validateRoot(anything(), anything())).thenReturn(true);
-                when(stringFieldSchemaMock.validate(anything(), anything())).thenReturn(true);
+                when(stringSchemaMock.validate(anything(), anything())).thenReturn(true);
                 const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
                     value: [VALID_STRING],
                 });
@@ -455,7 +454,7 @@ describe("ArrayValidationHandler", () => {
 
             it("should set isValid to true", () => {
                 when(arraySchemaMock.validateRoot(anything(), anything())).thenReturn(true);
-                when(stringFieldSchemaMock.validate(anything(), anything())).thenReturn(true);
+                when(stringSchemaMock.validate(anything(), anything())).thenReturn(true);
                 const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
                     value: [VALID_STRING],
                 });
@@ -467,7 +466,7 @@ describe("ArrayValidationHandler", () => {
 
             it("should clear all errors", () => {
                 when(arraySchemaMock.validateRoot(anything(), anything())).thenReturn(true);
-                when(stringFieldSchemaMock.validate(anything(), anything())).thenReturn(true);
+                when(stringSchemaMock.validate(anything(), anything())).thenReturn(true);
                 const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
                     value: [VALID_STRING],
                 });
@@ -486,7 +485,7 @@ describe("ArrayValidationHandler", () => {
                 when(arraySchemaMock.validateRoot(anything(), anything())).thenThrow(
                     new SchemaValidationError(["root error"])
                 );
-                when(stringFieldSchemaMock.validate(anything(), anything())).thenThrow(
+                when(stringSchemaMock.validate(anything(), anything())).thenThrow(
                     new SchemaValidationError(["field error"])
                 );
             });

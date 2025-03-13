@@ -1,8 +1,8 @@
 import { expect } from "vitest";
-import { anything, instance, reset, when } from "ts-mockito";
+import { anything, instance, when } from "ts-mockito";
 
 import { ObjectValidationHandler } from "@/ValidationHandler";
-import { Schema, SchemaValidationError } from "@/Schema";
+import { SchemaValidationError } from "@/Schema";
 
 import { VALID_TEST_OBJECT } from "tests/fixtures/valid-data";
 import {
