@@ -80,7 +80,8 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     }
 
     toReactive(): ArraySchemaValidation<Array<unknown>> {
-        const facade = this.brandHandlerInstance({
+        const facade = {
+            [HandlerInstance]: markRaw(this),
             value: this.value,
             errors: readonly(this.errors),
             fields: shallowReadonly(this.fields),
@@ -88,7 +89,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
             isDirty: readonly(this.isDirty),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
-        });
+        };
         return reactive(facade);
     }
 

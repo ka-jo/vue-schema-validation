@@ -143,24 +143,6 @@ export abstract class ValidationHandler<T = unknown> {
         });
     }
 
-    /**
-     * Defines the handler instance on an object
-     * @param obj - Object to define the handler instance on
-     * @returns The object with the handler instance defined
-     * @remarks
-     * We don't want the handler instance to be enumerable, so we use Object.defineProperty to define it.
-     */
-    protected brandHandlerInstance<THandler extends ValidationHandler<T>, TObj>(
-        this: THandler,
-        obj: TObj
-    ): TObj & { [HandlerInstance]: THandler } {
-        return Object.defineProperty(obj, HandlerInstance, {
-            value: markRaw(this),
-            writable: false,
-            enumerable: false,
-        }) as TObj & { [HandlerInstance]: THandler };
-    }
-
     public static create(
         schema: Schema,
         options: ValidationHandlerOptions

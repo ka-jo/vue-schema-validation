@@ -71,7 +71,8 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
     }
 
     toReactive(): ObjectSchemaValidation<POJO> {
-        const facade = this.brandHandlerInstance({
+        const facade = {
+            [HandlerInstance]: markRaw(this),
             value: this.value,
             errors: readonly(this.errors),
             fields: shallowReadonly(ref(this.fields)),
@@ -79,7 +80,7 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
             isDirty: readonly(this.isDirty),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
-        });
+        };
         return reactive(facade);
     }
 
