@@ -80,6 +80,52 @@ describe("ObjectValidationHandler", () => {
 
                 expect(handler.value.value).toEqual(DEFAULT_TEST_OBJECT);
             });
+
+            it("should initialize with field defaults if no value or schema default provided", () => {
+                when(objectSchemaMock.defaultValue).thenReturn(undefined);
+                when(stringSchemaMock.defaultValue).thenReturn(DEFAULT_STRING);
+                when(numberSchemaMock.defaultValue).thenReturn(DEFAULT_NUMBER);
+                when(booleanSchemaMock.defaultValue).thenReturn(DEFAULT_BOOLEAN);
+                when(nestedObjectSchemaMock.defaultValue).thenReturn(DEFAULT_NESTED_OBJECT);
+                when(nestedNumberSchemaMock.defaultValue).thenReturn(DEFAULT_NUMBER);
+                when(nestedBooleanSchemaMock.defaultValue).thenReturn(DEFAULT_BOOLEAN);
+
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
+
+                expect(handler.value.value).toEqual({
+                    stringField: DEFAULT_STRING,
+                    numberField: DEFAULT_NUMBER,
+                    booleanField: DEFAULT_BOOLEAN,
+                    objectField: {
+                        nestedStringField: DEFAULT_STRING,
+                        nestedNumberField: DEFAULT_NUMBER,
+                        nestedBooleanField: DEFAULT_BOOLEAN,
+                    },
+                });
+            });
+
+            it("should initialize with null values if no value, schema default, or field defaults provided", () => {
+                when(objectSchemaMock.defaultValue).thenReturn(undefined);
+                when(stringSchemaMock.defaultValue).thenReturn(undefined);
+                when(numberSchemaMock.defaultValue).thenReturn(undefined);
+                when(booleanSchemaMock.defaultValue).thenReturn(undefined);
+                when(nestedObjectSchemaMock.defaultValue).thenReturn(undefined);
+                when(nestedNumberSchemaMock.defaultValue).thenReturn(undefined);
+                when(nestedBooleanSchemaMock.defaultValue).thenReturn(undefined);
+
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
+
+                expect(handler.value.value).toEqual({
+                    stringField: null,
+                    numberField: null,
+                    booleanField: null,
+                    objectField: {
+                        nestedStringField: null,
+                        nestedNumberField: null,
+                        nestedBooleanField: null,
+                    },
+                });
+            });
         });
 
         describe("assignment", () => {
