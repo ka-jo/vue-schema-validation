@@ -14,3 +14,9 @@ export const DEFAULT_TEST_OBJECT = Object.freeze({
     booleanField: DEFAULT_BOOLEAN,
     objectField: DEFAULT_NESTED_OBJECT,
 });
+
+export const DEFAULT_TUPLE: [string, number, boolean] = Object.freeze([
+    DEFAULT_STRING,
+    DEFAULT_NUMBER,
+    DEFAULT_BOOLEAN,
+]) as any;

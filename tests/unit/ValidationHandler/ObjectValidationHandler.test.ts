@@ -65,6 +65,19 @@ describe("ObjectValidationHandler", () => {
             });
         });
 
+        it("should be updated when field values are updated", () => {
+            const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
+                value: VALID_TEST_OBJECT,
+            });
+
+            handler.fields.stringField.value = "new string";
+
+            expect(handler.value.value).toEqual({
+                ...VALID_TEST_OBJECT,
+                stringField: "new string",
+            });
+        });
+
         describe("initialization", () => {
             it("should initialize with provided value", () => {
                 const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
@@ -110,6 +123,7 @@ describe("ObjectValidationHandler", () => {
                 when(numberSchemaMock.defaultValue).thenReturn(undefined);
                 when(booleanSchemaMock.defaultValue).thenReturn(undefined);
                 when(nestedObjectSchemaMock.defaultValue).thenReturn(undefined);
+                when(nestedStringSchemaMock.defaultValue).thenReturn(undefined);
                 when(nestedNumberSchemaMock.defaultValue).thenReturn(undefined);
                 when(nestedBooleanSchemaMock.defaultValue).thenReturn(undefined);
 
@@ -226,6 +240,19 @@ describe("ObjectValidationHandler", () => {
                 });
             });
 
+            it("should set isDirty for child fields that change", () => {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
+                    value: VALID_TEST_OBJECT,
+                });
+
+                handler.value.value = {
+                    ...VALID_TEST_OBJECT,
+                    stringField: "new string",
+                };
+
+                expect(handler.fields.stringField.isDirty).toBe(true);
+            });
+
             it("should not set isDirty for child fields that do not change", () => {
                 const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                     value: DEFAULT_TEST_OBJECT,
@@ -270,10 +297,10 @@ describe("ObjectValidationHandler", () => {
             });
         });
 
-        it("should contain iterable $root property", () => {
+        it("should contain array $root property", () => {
             const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {});
 
-            expect(handler.errors.value).toHaveProperty("$root", expect.toBeIterable());
+            expect(handler.errors.value).toHaveProperty("$root", expect.any(Array));
         });
 
         it("should be iterable for all field errors", () => {
@@ -611,7 +638,23 @@ describe("ObjectValidationHandler", () => {
                 expect(handler.value.value).toEqual(VALID_TEST_OBJECT);
             });
 
-            describe("when value is a partial object", () => {
+            it("should use value for future resets with no value provided", () => {
+                const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
+                    value: DEFAULT_TEST_OBJECT,
+                });
+
+                handler.reset(VALID_TEST_OBJECT);
+
+                expect(handler.value.value).toEqual(VALID_TEST_OBJECT);
+
+                handler.value.value = DEFAULT_TEST_OBJECT;
+
+                handler.reset();
+
+                expect(handler.value.value).toEqual(VALID_TEST_OBJECT);
+            });
+
+            describe("when value is a partial", () => {
                 it("should merge provided value with initial value", () => {
                     const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                         value: INVALID_TEST_OBJECT,

@@ -7,9 +7,9 @@ import type {
     ArraySchemaValidation,
     ArraySchemaValidationErrors,
 } from "@/Types/ArraySchemaValidation";
-import { ErrorObjectWithRoot, HandlerInstance, makeIterableErrorObjectWithRoot } from "@/common";
+import { ErrorObjectWithRoot, HandlerInstance, makeIterableErrorObject } from "@/common";
 import { SchemaValidationError } from "@/Schema";
-import { ReadonlyRef, Writable } from "@/Types/util";
+import { ReadonlyRef } from "@/Types/util";
 
 export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     private _stopValueWatcher: () => void = () => {};
@@ -53,7 +53,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
             get: this.getValue.bind(this),
             set: this.setValue.bind(this),
         });
-        this.errors = ref(makeIterableErrorObjectWithRoot({}, this._rootErrors));
+        this.errors = ref(makeIterableErrorObject({}, this._rootErrors));
         this.fields = ref([]);
         this.isValid = computed(() => this._isRootValid.value && this.areAllFieldsValid());
         this.isDirty = computed(() => this._isRootDirty.value || this.isAnyFieldDirty());
@@ -117,7 +117,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
 
     private initializeNewValue(value: Array<unknown>) {
         const fields = new Array<SchemaValidation>();
-        const errors = makeIterableErrorObjectWithRoot({}, this._rootErrors);
+        const errors = makeIterableErrorObject({}, this._rootErrors);
 
         for (let i = 0; i < value.length; i++) {
             const el = value[i];

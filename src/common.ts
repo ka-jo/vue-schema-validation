@@ -19,32 +19,18 @@ export function* iterableFieldIterator(this: Record<PropertyKey, ReadonlyRef<Ite
 }
 
 /**
- * This function implements the iterator protocol on error objects for ObjectValidationHandler, ArrayValidationHandler, and TupleValidationHandler
- * @param errors
- * @returns the errors object with the Symbol.iterator property added
- */
-export function makeIterableErrorObject(
-    errors:
-        | Record<string, ReadonlyRef<Iterable<string>>>
-        | Record<number, ReadonlyRef<Iterable<string>>>
-): ErrorObject {
-    //@ts-ignore: I don't like needing to do TypeScript tricks like this, but the type coming in should not already have Symbol.iterator
-    errors[Symbol.iterator] = iterableFieldIterator.bind(errors);
-    return errors as ErrorObject;
-}
-
-/**
- * This function calls {@link makeIterableErrorObject} to make the provided errors object iterable, and adds a $root property to the error object
+ * This function implements the iterator protocol on error objects for ObjectValidationHandler, ArrayValidationHandler, and TupleValidationHandler.
+ * It also adds a $root property to the error object containing the root errors for the validation handler.
  * @param errors - The error object to add the iterator to
  * @param rootErrors - The root errors ref to add to the error object
  * @returns the errors object with the Symbol.iterator property added
  */
-export function makeIterableErrorObjectWithRoot(
+export function makeIterableErrorObject(
     errors: Record<PropertyKey, ReadonlyRef<Iterable<string>>>,
     rootErrors: Ref<ReadonlyArray<string>>
 ): ErrorObjectWithRoot {
-    //@ts-ignore
-    errors = makeIterableErrorObject(errors);
+    //@ts-ignore: I don't like needing to do TypeScript tricks like this, but the type coming in should not already have Symbol.iterator
+    errors[Symbol.iterator] = iterableFieldIterator.bind(errors);
     //@ts-ignore
     errors.$root = rootErrors;
     return errors as ErrorObjectWithRoot;

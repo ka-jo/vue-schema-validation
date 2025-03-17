@@ -62,3 +62,9 @@ export const INVALID_TEST_OBJECT_WITH_INVALID_NESTED_OBJECT = Object.freeze({
     booleanField: VALID_BOOLEAN,
     objectField: INVALID_NESTED_OBJECT,
 });
+
+export const INVALID_TUPLE: [string, number, boolean] = Object.freeze([
+    INVALID_STRING,
+    INVALID_NUMBER,
+    INVALID_BOOLEAN,
+]) as any;

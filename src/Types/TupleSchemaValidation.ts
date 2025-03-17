@@ -32,6 +32,6 @@ export type TupleSchemaValidationFields<T extends Array<unknown> = Array<unknown
  * Without it, the resulting type would be expected to be an array, as mapping over an array results in an array.
  */
 export type TupleSchemaValidationErrors<T extends Array<unknown> = Array<unknown>> =
-    Iterable<string> & {
+    Iterable<string> & { readonly $root: ReadonlyArray<string> } & {
         readonly [K in keyof Omit<T, keyof any[]>]: SchemaValidation<T[K]>["errors"];
     };

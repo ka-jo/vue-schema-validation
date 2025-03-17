@@ -276,7 +276,7 @@ describe("ArrayValidationHandler", () => {
             });
         });
 
-        it("should be updated when fields are updated", () => {
+        it("should be updated when field values are updated", () => {
             const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {
                 value: [VALID_STRING],
             });
@@ -294,10 +294,10 @@ describe("ArrayValidationHandler", () => {
             expect(handler.errors).toBeVueRef();
         });
 
-        it("should contain iterable $root property", () => {
+        it("should contain arra $root property", () => {
             const handler = ArrayValidationHandler.create(instance(arraySchemaMock), {});
 
-            expect(handler.errors.value).toHaveProperty("$root", expect.toBeIterable());
+            expect(handler.errors.value).toHaveProperty("$root", expect.any(Array));
         });
 
         it("should have number keys with field errors as value", () => {

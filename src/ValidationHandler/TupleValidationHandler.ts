@@ -1,4 +1,4 @@
-import { computed, reactive, readonly, ref, Ref, shallowReadonly } from "vue";
+import { computed, markRaw, reactive, readonly, ref, Ref, shallowReadonly } from "vue";
 import { SchemaValidation } from "@/Types/SchemaValidation";
 import { ReadonlyRef } from "@/Types/util";
 import {
@@ -8,10 +8,18 @@ import {
 } from "@/Types/TupleSchemaValidation";
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import { Schema } from "@/Schema";
-import { makeIterableErrorObject } from "@/common";
+import { HandlerInstance, makeIterableErrorObject } from "@/common";
 
 export class TupleValidationHandler extends ValidationHandler<Array<unknown>> {
     private _value: Array<unknown>;
+    /**
+     * The root errors of the validation
+     * @remarks
+     * I debated if tuple validation should have root errors. We ensure the tuple value is constrained to the
+     * number of fields in the schema, so — realistically — the root errors should always be empty. But a user
+     * could add their own custom validation to the tuple schema, so I decided to add root validation for such cases.
+     */
+    private _rootErrors: Ref<ReadonlyArray<string>>;
 
     readonly schema!: Schema<"tuple">;
     readonly errors: Ref<TupleSchemaValidationErrors<Array<unknown>>>;
@@ -29,7 +37,8 @@ export class TupleValidationHandler extends ValidationHandler<Array<unknown>> {
         super(schema, options);
 
         this._value = reactive(value);
-        this.errors = ref(makeIterableErrorObject(errors));
+        this._rootErrors = ref([]);
+        this.errors = ref(makeIterableErrorObject(errors, this._rootErrors));
         this.fields = fields;
         this.isValid = computed(() => this.areAllFieldsValid());
         this.isDirty = computed(() => this.isAnyFieldDirty());
@@ -57,7 +66,8 @@ export class TupleValidationHandler extends ValidationHandler<Array<unknown>> {
     }
 
     toReactive(): TupleSchemaValidation<Array<unknown>> {
-        const facade = this.brandHandlerInstance({
+        const facade = {
+            [HandlerInstance]: markRaw(this),
             value: this.value,
             errors: readonly(this.errors),
             fields: shallowReadonly(ref(this.fields)),
@@ -65,7 +75,7 @@ export class TupleValidationHandler extends ValidationHandler<Array<unknown>> {
             isDirty: readonly(this.isDirty),
             validate: this.validate.bind(this),
             reset: this.reset.bind(this),
-        });
+        };
         return reactive(facade);
     }
 

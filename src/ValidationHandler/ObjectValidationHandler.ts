@@ -8,7 +8,7 @@ import type {
     ObjectSchemaValidation,
     ObjectSchemaValidationErrors,
 } from "@/Types/ObjectSchemaValidation";
-import { HandlerInstance, makeIterableErrorObjectWithRoot } from "@/common";
+import { HandlerInstance, makeIterableErrorObject } from "@/common";
 
 /**
  * Validation handler implementation for object schemas
@@ -44,7 +44,7 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
 
         this._value = reactive(value);
         this._rootErrors = ref([]);
-        this.errors = ref(makeIterableErrorObjectWithRoot(errors, this._rootErrors));
+        this.errors = ref(makeIterableErrorObject(errors, this._rootErrors));
         this.fields = fields;
         this.isValid = computed(() => this.isRootValid() && this.areAllFieldsValid());
         this.isDirty = computed(() => this.isAnyFieldDirty());

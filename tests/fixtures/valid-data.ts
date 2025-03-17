@@ -16,3 +16,9 @@ export const VALID_TEST_OBJECT = Object.freeze({
     booleanField: VALID_BOOLEAN,
     objectField: VALID_NESTED_OBJECT,
 });
+
+export const VALID_TUPLE: [string, number, boolean] = Object.freeze([
+    VALID_STRING,
+    VALID_NUMBER,
+    VALID_BOOLEAN,
+]) as any;
