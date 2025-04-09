@@ -118,7 +118,7 @@ export type SchemaFields<T extends SchemaType> = T extends "object"
     : T extends "array"
     ? Schema
     : T extends "tuple"
-    ? Record<number, Schema>
+    ? Array<Schema>
     : undefined;
 
 /**

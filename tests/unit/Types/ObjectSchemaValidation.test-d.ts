@@ -1,4 +1,4 @@
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 import {
     ObjectSchemaValidation,
     ObjectSchemaValidationErrors,
@@ -18,12 +18,12 @@ describe("ObjectSchemaValidation type", () => {
         it("should be readonly", () => {
             const thing: ObjectSchemaValidation<TestSchema> = {} as any;
             // @ts-expect-error
-            thing[HandlerInstance] = {} as any;
+            thing[Handler] = {} as any;
         });
 
         it("should be a ValidationHandler of the correct type", () => {
             expectTypeOf<ObjectSchemaValidation<TestSchema>>()
-                .toHaveProperty(HandlerInstance)
+                .toHaveProperty(Handler)
                 .toEqualTypeOf<ValidationHandler<TestSchema>>();
         });
     });

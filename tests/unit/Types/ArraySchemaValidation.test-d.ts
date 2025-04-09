@@ -1,7 +1,7 @@
 import { ArraySchemaValidation, ArraySchemaValidationErrors } from "@/Types/ArraySchemaValidation";
 import { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
 import { ValidationHandler } from "@/ValidationHandler";
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 
 describe("ArraySchemaValidation type", () => {
     it("should extend ISchemaValidation", () => {
@@ -12,12 +12,12 @@ describe("ArraySchemaValidation type", () => {
         it("should be readonly", () => {
             const thing: ArraySchemaValidation<number[]> = {} as any;
             //@ts-expect-error
-            thing[HandlerInstance] = {} as any;
+            thing[Handler] = {} as any;
         });
 
         it("should be a ValidationHandler of the correct type", () => {
             expectTypeOf<ArraySchemaValidation<number[]>>()
-                .toHaveProperty(HandlerInstance)
+                .toHaveProperty(Handler)
                 .toEqualTypeOf<ValidationHandler<number[]>>();
         });
     });

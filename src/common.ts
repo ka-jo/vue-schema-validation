@@ -1,7 +1,17 @@
 import { Ref } from "vue";
-import { ReadonlyRef } from "./Types/util";
 
-export const HandlerInstance: unique symbol = Symbol("HandlerInstance");
+import { ReadonlyRef } from "@/Types/util";
+import { SchemaValidation } from "@/Types/SchemaValidation";
+
+export const Handler: unique symbol = Symbol("Handler");
+
+export const ProxyHooks: unique symbol = Symbol("ProxyHooks");
+
+export const noop = () => {};
+
+export function isSchemaValidation(value: unknown): value is SchemaValidation {
+    return Handler in Object(value);
+}
 
 /**
  * This function is meant to be used as the iterator for error objects of ObjectValidationHandler and ArrayValidationHandler

@@ -1,4 +1,4 @@
-import { computed, markRaw, reactive, readonly, ref, Ref, shallowReadonly } from "vue";
+import { computed, ComputedRef, markRaw, reactive, readonly, ref, Ref, shallowReadonly } from "vue";
 
 import { ValidationHandler, ValidationHandlerOptions } from "@/ValidationHandler";
 import { Schema, SchemaValidationError } from "@/Schema";
@@ -8,7 +8,7 @@ import type {
     ObjectSchemaValidation,
     ObjectSchemaValidationErrors,
 } from "@/Types/ObjectSchemaValidation";
-import { HandlerInstance, makeIterableErrorObject } from "@/common";
+import { Handler, makeIterableErrorObject } from "@/common";
 
 /**
  * Validation handler implementation for object schemas
@@ -30,8 +30,8 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
      * but for the purposes of this class, we don't care what keys are present — only that the values are SchemaValidation instances.
      */
     readonly fields: Record<string, SchemaValidation>;
-    readonly isValid: Ref<boolean>;
-    readonly isDirty: Ref<boolean>;
+    readonly isValid: ComputedRef<boolean>;
+    readonly isDirty: ComputedRef<boolean>;
 
     constructor(
         schema: Schema<"object">,
@@ -59,20 +59,26 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
         return this.performFieldValidation() && isRootValid;
     }
 
-    reset(value: POJO = {}): void {
+    reset(value?: POJO): void {
         this._rootErrors.value = [];
 
-        value = Object.assign({}, this.schema.defaultValue, this.options.value, value);
+        if (value === undefined) {
+            value = this.options.value || this.schema.defaultValue || {};
+        } else {
+            this.options.value = value;
+        }
+
         for (const key of Object.keys(this.fields)) {
             const field = this.fields[key];
             field.reset(value[key]);
         }
+
         this._triggerValue();
     }
 
     toReactive(): ObjectSchemaValidation<POJO> {
         const facade = {
-            [HandlerInstance]: markRaw(this),
+            [Handler]: markRaw(this),
             value: this.value,
             errors: readonly(this.errors),
             fields: shallowReadonly(ref(this.fields)),
@@ -82,6 +88,13 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
             reset: this.reset.bind(this),
         };
         return reactive(facade);
+    }
+
+    tearDown(): void {
+        for (const key of Object.keys(this.fields)) {
+            const field = this.fields[key];
+            field[Handler].tearDown();
+        }
     }
 
     protected getValue(): POJO {

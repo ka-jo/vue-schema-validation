@@ -1,4 +1,4 @@
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 import { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
 import { DeepPartial, POJO } from "@/Types/util";
 import { ValidationHandler } from "@/ValidationHandler";
@@ -10,7 +10,7 @@ export interface ObjectSchemaValidation<T extends object = POJO> extends ISchema
     /**
      * @internal
      */
-    readonly [HandlerInstance]: ValidationHandler<T>;
+    readonly [Handler]: ValidationHandler<T>;
 
     get value(): ObjectSchemaValidationValue<T>;
     set value(value: DeepPartial<T>);

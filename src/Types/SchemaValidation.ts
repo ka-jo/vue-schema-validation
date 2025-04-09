@@ -1,4 +1,4 @@
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 import { ArraySchemaValidation } from "@/Types/ArraySchemaValidation";
 import { ObjectSchemaValidation } from "@/Types/ObjectSchemaValidation";
 import { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
@@ -43,7 +43,7 @@ export interface ISchemaValidation {
      * A reference to the {@link ValidationHandler} instance that is managing the validation
      * @internal
      */
-    readonly [HandlerInstance]: ValidationHandler<unknown>;
+    readonly [Handler]: ValidationHandler<unknown>;
 
     value: unknown;
     readonly errors: Iterable<string>;

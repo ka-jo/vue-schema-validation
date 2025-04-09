@@ -1,7 +1,7 @@
 import type { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
 import type { ElementType } from "@/Types/util";
 import type { ValidationHandler } from "@/ValidationHandler";
-import type { HandlerInstance } from "@/common";
+import type { Handler } from "@/common";
 
 /**
  * @public
@@ -11,7 +11,7 @@ export interface ArraySchemaValidation<T extends Array<unknown> = Array<unknown>
     /**
      * @internal
      */
-    readonly [HandlerInstance]: ValidationHandler<T>;
+    readonly [Handler]: ValidationHandler<T>;
     value: T;
     readonly fields: ReadonlyArray<SchemaValidation<ElementType<T>>>;
     readonly errors: ArraySchemaValidationErrors<T>;

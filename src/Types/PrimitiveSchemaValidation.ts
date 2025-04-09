@@ -1,4 +1,4 @@
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 import { ISchemaValidation } from "@/Types/SchemaValidation";
 import { ValidationHandler } from "@/ValidationHandler";
 
@@ -18,7 +18,7 @@ export interface PrimitiveSchemaValidation<T = unknown> extends ISchemaValidatio
     /**
      * @internal
      */
-    readonly [HandlerInstance]: ValidationHandler<T>;
+    readonly [Handler]: ValidationHandler<T>;
     get value(): T | null;
     set value(value: T | null | undefined);
     readonly errors: ReadonlyArray<string>;

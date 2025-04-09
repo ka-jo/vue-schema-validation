@@ -1,4 +1,4 @@
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 import { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
 import {
     TupleSchemaValidation,
@@ -16,12 +16,12 @@ describe("TupleSchemaValidation type", () => {
         it("should be readonly", () => {
             const thing: TupleSchemaValidation<[number, string]> = {} as any;
             //@ts-expect-error
-            thing[HandlerInstance] = {} as any;
+            thing[Handler] = {} as any;
         });
 
         it("should be a ValidationHandler of the correct type", () => {
             expectTypeOf<TupleSchemaValidation<[number, string]>>()
-                .toHaveProperty(HandlerInstance)
+                .toHaveProperty(Handler)
                 .toEqualTypeOf<ValidationHandler<[number, string]>>();
         });
     });

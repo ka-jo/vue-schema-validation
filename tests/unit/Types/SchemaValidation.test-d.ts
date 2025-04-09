@@ -3,19 +3,19 @@ import type { ArraySchemaValidation } from "@/Types/ArraySchemaValidation";
 import type { ObjectSchemaValidation } from "@/Types/ObjectSchemaValidation";
 import type { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
 import type { ValidationHandler } from "@/ValidationHandler";
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 
 describe("ISchemaValidation type", () => {
     describe("HandlerInstance symbol property", () => {
         it("should be readonly", () => {
-            expectTypeOf<ISchemaValidation>().pick(HandlerInstance).not.toEqualTypeOf<{
-                set [HandlerInstance](value: ValidationHandler<unknown>);
+            expectTypeOf<ISchemaValidation>().pick(Handler).not.toEqualTypeOf<{
+                set [Handler](value: ValidationHandler<unknown>);
             }>();
         });
 
         it("should be a ValidationHandler of unknown type", () => {
-            expectTypeOf<ISchemaValidation>().pick(HandlerInstance).toEqualTypeOf<{
-                readonly [HandlerInstance]: ValidationHandler<unknown>;
+            expectTypeOf<ISchemaValidation>().pick(Handler).toEqualTypeOf<{
+                readonly [Handler]: ValidationHandler<unknown>;
             }>();
         });
     });

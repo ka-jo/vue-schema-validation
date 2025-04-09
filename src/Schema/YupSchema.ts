@@ -89,7 +89,7 @@ export class YupSchema<T extends SchemaType = SchemaType> extends Schema<T> {
         }
 
         if (YupSchema.isTupleSchema(schema)) {
-            const fields: Record<number, Schema> = {};
+            const fields: Array<Schema> = [];
             //@ts-ignore: I think the yup types for TupleSchemaSpec are wrong. Based on my experiments, it's actually an array, but is typed as a Record
             const innerTypes: Array<yup_ISchema> = schema.spec.types;
 

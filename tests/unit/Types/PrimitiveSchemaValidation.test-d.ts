@@ -1,4 +1,4 @@
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 import { PrimitiveSchemaValidation } from "@/Types/PrimitiveSchemaValidation";
 import { ISchemaValidation } from "@/Types/SchemaValidation";
 import { ValidationHandler } from "@/ValidationHandler";
@@ -12,12 +12,12 @@ describe("PrimitiveSchemaValidation type", () => {
         it("should be readonly", () => {
             const thing: PrimitiveSchemaValidation<string> = {} as any;
             //@ts-expect-error
-            thing[HandlerInstance] = {} as any;
+            thing[Handler] = {} as any;
         });
 
         it("should be a ValidationHandler of the correct type", () => {
             expectTypeOf<PrimitiveSchemaValidation<string>>()
-                .toHaveProperty(HandlerInstance)
+                .toHaveProperty(Handler)
                 .toEqualTypeOf<ValidationHandler<string>>();
         });
     });

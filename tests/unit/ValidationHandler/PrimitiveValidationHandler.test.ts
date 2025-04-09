@@ -6,7 +6,7 @@ import { SchemaValidationError } from "@/Schema/SchemaValidationError";
 import { VALID_STRING } from "tests/fixtures/valid-data";
 import { DEFAULT_STRING } from "tests/fixtures/default-data";
 import { INVALID_STRING } from "tests/fixtures/invalid-data";
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 
 describe("PrimitiveValidationHandler", () => {
     let schemaMock: Schema<"primitive">;
@@ -121,7 +121,7 @@ describe("PrimitiveValidationHandler", () => {
     describe("fields property", () => {
         it("should be undefined", () => {
             const handler = PrimitiveValidationHandler.create(instance(schemaMock), {});
-
+            // @ts-expect-error
             expect(handler.fields).toBeUndefined();
         });
     });

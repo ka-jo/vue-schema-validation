@@ -1,4 +1,4 @@
-import { customRef, markRaw, reactive, readonly, ref, Ref, shallowReadonly } from "vue";
+import { computed, customRef, markRaw, reactive, readonly, ref, Ref, shallowReadonly } from "vue";
 
 import { Schema } from "@/Schema";
 import { ValidationOptions } from "@/Types/ValidationOptions";
@@ -9,7 +9,7 @@ import {
     PrimitiveValidationHandler,
     TupleValidationHandler,
 } from "@/ValidationHandler";
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 
 /**
  * Base class for managing validation state for a value
@@ -53,7 +53,7 @@ export abstract class ValidationHandler<T = unknown> {
      * to notify Vue's reactivity system that the value has been accessed.
      * @returns The value being validated
      */
-    protected abstract getValue(): T;
+    abstract getValue(): T;
 
     /**
      * Sets the value being validated
@@ -62,7 +62,7 @@ export abstract class ValidationHandler<T = unknown> {
      * to notify Vue's reactivity system that the value has been updated.
      * @param value - The new value to set
      */
-    protected abstract setValue(value: T): void;
+    abstract setValue(value: T): void;
 
     /**
      * Ref to the value being validated
@@ -126,14 +126,23 @@ export abstract class ValidationHandler<T = unknown> {
      */
     abstract toReactive(): ISchemaValidation;
 
+    /**
+     * Performs any necessary cleanup when the ValidationHandler is no longer needed
+     * @remarks
+     * Array and tuple validation handlers need to stop their value watchers when they are no longer needed.
+     * For the most part, Vue will handle cleanup if this is being used in a component, but we provide it as
+     * a fallback for use outside of Vue components. ArrayValidationHandler will also call this when fields
+     * are removed from the array.
+     */
+    abstract tearDown(): void;
+
     constructor(schema: Schema, options: ValidationHandlerOptions<T>) {
+        this.getValue = this.getValue.bind(this);
+        this.setValue = this.setValue.bind(this);
+
         this.schema = schema;
         this.options = options;
-        // Not a huge fan of this, but in order for array values to stay in sync when an element
-        // value is changed from one of its fields, the value ref should be a computed for arrays.
-        if (schema.type !== "array") {
-            this.value = this.initializeValue();
-        }
+        this.value = this.initializeValue();
     }
 
     private initializeValue(): Ref<T> {
@@ -141,8 +150,8 @@ export abstract class ValidationHandler<T = unknown> {
             this._trackValue = track;
             this._triggerValue = trigger;
             return {
-                get: this.getValue.bind(this),
-                set: this.setValue.bind(this),
+                get: this.getValue,
+                set: this.setValue,
             };
         });
     }

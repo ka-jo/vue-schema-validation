@@ -1,5 +1,7 @@
 import { anything, instance, when } from "ts-mockito";
 import { TupleValidationHandler } from "@/ValidationHandler";
+import { TupleSchemaValidation } from "@/Types/TupleSchemaValidation";
+import { SchemaValidationError } from "@/Schema";
 import {
     initializeTupleSchemaMock,
     resetTupleSchemaMock,
@@ -15,7 +17,6 @@ import {
     DEFAULT_STRING,
     DEFAULT_TUPLE,
 } from "tests/fixtures/default-data";
-import { SchemaValidationError } from "@/Schema";
 import {
     initializeObjectSchemaMock,
     objectSchemaMock,
@@ -32,6 +33,7 @@ import {
     INVALID_STRING,
     INVALID_TUPLE,
 } from "tests/fixtures/invalid-data";
+import { anyArrayWithValues } from "tests/util/any-array-with-values";
 
 describe("TupleValidationHandler", () => {
     beforeEach(() => {
@@ -62,7 +64,13 @@ describe("TupleValidationHandler", () => {
 
             handler.fields[0].value = VALID_STRING;
 
-            expect(handler.value).toEqual([VALID_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN]);
+            // Because the value is an array proxy, normal expect checks for arrays don't seem to work
+            expect(handler.value.value).toBeInstanceOf(Array);
+            expect(handler.value.value).toMatchObject({
+                0: VALID_STRING,
+                1: DEFAULT_NUMBER,
+                2: DEFAULT_BOOLEAN,
+            });
         });
 
         describe("when initialized", () => {
@@ -71,7 +79,12 @@ describe("TupleValidationHandler", () => {
                     value: [VALID_STRING, VALID_NUMBER, VALID_BOOLEAN],
                 });
 
-                expect(handler.value).toEqual([VALID_STRING, VALID_NUMBER, VALID_BOOLEAN]);
+                expect(handler.value.value).toBeInstanceOf(Array);
+                expect(handler.value.value).toMatchObject({
+                    0: VALID_STRING,
+                    1: VALID_NUMBER,
+                    2: VALID_BOOLEAN,
+                });
             });
 
             it("should initialize with schema default value if no value provided", () => {
@@ -82,7 +95,12 @@ describe("TupleValidationHandler", () => {
                 ]);
                 const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
 
-                expect(handler.value).toEqual([DEFAULT_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN]);
+                expect(handler.value.value).toBeInstanceOf(Array);
+                expect(handler.value.value).toMatchObject({
+                    0: DEFAULT_STRING,
+                    1: DEFAULT_NUMBER,
+                    2: DEFAULT_BOOLEAN,
+                });
             });
 
             it("should initialize with field default values if no value or schema default value provided", () => {
@@ -92,7 +110,12 @@ describe("TupleValidationHandler", () => {
                 when(booleanSchemaMock.defaultValue).thenReturn(DEFAULT_BOOLEAN);
                 const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
 
-                expect(handler.value).toEqual([DEFAULT_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN]);
+                expect(handler.value.value).toBeInstanceOf(Array);
+                expect(handler.value.value).toMatchObject({
+                    0: DEFAULT_STRING,
+                    1: DEFAULT_NUMBER,
+                    2: DEFAULT_BOOLEAN,
+                });
             });
 
             it("should initialize with null values if no value, schema default value, or field default values provided", () => {
@@ -102,7 +125,12 @@ describe("TupleValidationHandler", () => {
                 when(booleanSchemaMock.defaultValue).thenReturn(undefined);
                 const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
 
-                expect(handler.value).toEqual([null, null, null]);
+                expect(handler.value.value).toBeInstanceOf(Array);
+                expect(handler.value.value).toMatchObject({
+                    0: null,
+                    1: null,
+                    2: null,
+                });
             });
         });
 
@@ -118,7 +146,12 @@ describe("TupleValidationHandler", () => {
 
                     handler.value.value = [VALID_STRING, undefined, VALID_BOOLEAN];
 
-                    expect(handler.value).toEqual([VALID_STRING, DEFAULT_NUMBER, VALID_BOOLEAN]);
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: VALID_STRING,
+                        1: DEFAULT_NUMBER,
+                        2: VALID_BOOLEAN,
+                    });
                 });
 
                 it("should merge provided value with schema default and field defaults", () => {
@@ -128,7 +161,12 @@ describe("TupleValidationHandler", () => {
 
                     handler.value.value = [undefined, VALID_NUMBER, undefined];
 
-                    expect(handler.value).toEqual([DEFAULT_STRING, VALID_NUMBER, DEFAULT_BOOLEAN]);
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: DEFAULT_STRING,
+                        1: VALID_NUMBER,
+                        2: DEFAULT_BOOLEAN,
+                    });
                 });
 
                 it("should result in null values if no value, schema default value, or field default values provided", () => {
@@ -140,7 +178,12 @@ describe("TupleValidationHandler", () => {
 
                     handler.value.value = [undefined, undefined, undefined];
 
-                    expect(handler.value).toEqual([null, null, null]);
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: null,
+                        1: null,
+                        2: null,
+                    });
                 });
             });
 
@@ -152,7 +195,12 @@ describe("TupleValidationHandler", () => {
 
                     handler.value.value = [VALID_STRING, VALID_NUMBER, VALID_BOOLEAN];
 
-                    expect(handler.value).toEqual([VALID_STRING, VALID_NUMBER, VALID_BOOLEAN]);
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: VALID_STRING,
+                        1: VALID_NUMBER,
+                        2: VALID_BOOLEAN,
+                    });
                 });
             });
 
@@ -161,7 +209,7 @@ describe("TupleValidationHandler", () => {
                     value: [DEFAULT_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN],
                 });
 
-                handler.value.value = [VALID_STRING, VALID_NUMBER, VALID_BOOLEAN];
+                handler.value.value = [VALID_STRING, VALID_NUMBER, !DEFAULT_BOOLEAN];
 
                 expect(handler.fields[0].isDirty).toBe(true);
                 expect(handler.fields[1].isDirty).toBe(true);
@@ -190,7 +238,12 @@ describe("TupleValidationHandler", () => {
 
                     handler.value.value[0] = VALID_STRING;
 
-                    expect(handler.value).toEqual([VALID_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN]);
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: VALID_STRING,
+                        1: DEFAULT_NUMBER,
+                        2: DEFAULT_BOOLEAN,
+                    });
                 });
 
                 it("should set isDirty for child field that changes", () => {
@@ -212,15 +265,21 @@ describe("TupleValidationHandler", () => {
 
                     expect(handler.fields[0].isDirty).toBe(false);
                 });
+
+                it("should not create new field", () => {
+                    const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {
+                        value: [DEFAULT_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN],
+                    });
+
+                    expect(handler.fields).toHaveLength(3);
+
+                    handler.value.value[4] = VALID_STRING;
+
+                    expect(handler.fields).toHaveLength(3);
+                });
             });
 
             describe("via push", () => {
-                // I made the decision that tuple validation should behave more like object validation than array validation
-                // in that it has a fixed number of fields; they just happen to be indexed by number with tuples.
-                // This means that every value that could exist in a tuple will be defined, even if it's null.
-                // Tuples will always be capped at the length of the schema, and pushing a value will have no effect.
-                // This will make handling tuple validation a little more simple because we don't have to provide
-                // root validation.
                 it("should not update value", () => {
                     const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {
                         value: [DEFAULT_STRING, DEFAULT_NUMBER, null],
@@ -228,7 +287,12 @@ describe("TupleValidationHandler", () => {
 
                     handler.value.value.push(VALID_BOOLEAN);
 
-                    expect(handler.value).toEqual([DEFAULT_STRING, DEFAULT_NUMBER, null]);
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: DEFAULT_STRING,
+                        1: DEFAULT_NUMBER,
+                        2: null,
+                    });
                 });
 
                 it("should not create new field", () => {
@@ -245,15 +309,21 @@ describe("TupleValidationHandler", () => {
             });
 
             describe("via pop", () => {
-                it("should update value with null value for popped field", () => {
+                it("should update value with field default for popped field", () => {
+                    when(booleanSchemaMock.defaultValue).thenReturn(!DEFAULT_BOOLEAN);
                     const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {
                         value: [DEFAULT_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN],
                     });
 
                     handler.value.value.pop();
 
-                    expect(handler.value).toEqual([DEFAULT_STRING, DEFAULT_NUMBER, null]);
-                    expect(handler.fields[2].value).toBeNull();
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: DEFAULT_STRING,
+                        1: DEFAULT_NUMBER,
+                        2: !DEFAULT_BOOLEAN,
+                    });
+                    expect(handler.fields[2].value).toBe(!DEFAULT_BOOLEAN);
                 });
 
                 it("should not change value length", () => {
@@ -261,11 +331,11 @@ describe("TupleValidationHandler", () => {
                         value: [DEFAULT_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN],
                     });
 
-                    expect(handler.value).toHaveLength(3);
+                    expect(handler.value.value).toHaveLength(3);
 
                     handler.value.value.pop();
 
-                    expect(handler.value).toHaveLength(3);
+                    expect(handler.value.value).toHaveLength(3);
                 });
 
                 it("should not remove field", () => {
@@ -282,15 +352,21 @@ describe("TupleValidationHandler", () => {
             });
 
             describe("via shift", () => {
-                it("should update value with null value for shifted field", () => {
+                it("should update value with default field value for last field", () => {
+                    when(booleanSchemaMock.defaultValue).thenReturn(null);
                     const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {
                         value: [DEFAULT_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN],
                     });
 
                     handler.value.value.shift();
 
-                    expect(handler.value).toEqual([DEFAULT_NUMBER, DEFAULT_BOOLEAN, null]);
-                    expect(handler.fields[0].value).toBeNull();
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: DEFAULT_NUMBER,
+                        1: DEFAULT_BOOLEAN,
+                        2: null,
+                    });
+                    expect(handler.fields[2].value).toBeNull();
                 });
 
                 it("should not change value length", () => {
@@ -298,11 +374,11 @@ describe("TupleValidationHandler", () => {
                         value: [DEFAULT_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN],
                     });
 
-                    expect(handler.value).toHaveLength(3);
+                    expect(handler.value.value).toHaveLength(3);
 
                     handler.value.value.shift();
 
-                    expect(handler.value).toHaveLength(3);
+                    expect(handler.value.value).toHaveLength(3);
                 });
 
                 it("should not remove field", () => {
@@ -319,9 +395,6 @@ describe("TupleValidationHandler", () => {
             });
 
             describe("via unshift", () => {
-                // The way this test is written is as if we expected it to behave in a more helfpul way by replacing the null value
-                // instead of moving it down the array, but that would be inconsistent with how unshift works and previous decisions
-                // about how tuples should behave. This test serves to describe expected behavior for what could be a gotcha.
                 it("should update value", () => {
                     const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {
                         value: [null, DEFAULT_NUMBER, DEFAULT_BOOLEAN],
@@ -329,7 +402,12 @@ describe("TupleValidationHandler", () => {
 
                     handler.value.value.unshift(VALID_STRING);
 
-                    expect(handler.value).toEqual([VALID_STRING, null, DEFAULT_NUMBER]);
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: VALID_STRING,
+                        1: null,
+                        2: DEFAULT_NUMBER,
+                    });
                 });
 
                 it("should not change value length", () => {
@@ -337,11 +415,11 @@ describe("TupleValidationHandler", () => {
                         value: [null, DEFAULT_NUMBER, DEFAULT_BOOLEAN],
                     });
 
-                    expect(handler.value).toHaveLength(3);
+                    expect(handler.value.value).toHaveLength(3);
 
                     handler.value.value.unshift(VALID_STRING);
 
-                    expect(handler.value).toHaveLength(3);
+                    expect(handler.value.value).toHaveLength(3);
                 });
 
                 it("should set isDirty for child fields that change", () => {
@@ -377,7 +455,12 @@ describe("TupleValidationHandler", () => {
 
                     handler.value.value.splice(1, 1, VALID_NUMBER);
 
-                    expect(handler.value).toEqual([DEFAULT_STRING, VALID_NUMBER, DEFAULT_BOOLEAN]);
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: DEFAULT_STRING,
+                        1: VALID_NUMBER,
+                        2: DEFAULT_BOOLEAN,
+                    });
                 });
 
                 it("should set isDirty for child field that changes", () => {
@@ -406,10 +489,16 @@ describe("TupleValidationHandler", () => {
                     const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {
                         value: [DEFAULT_STRING, DEFAULT_NUMBER, DEFAULT_BOOLEAN],
                     });
-
                     handler.value.value.fill(VALID_STRING);
 
-                    expect(handler.value).toEqual([VALID_STRING, VALID_STRING, VALID_STRING]);
+                    setTimeout(() => {
+                        expect(handler.value.value).toBeInstanceOf(Array);
+                        expect(handler.value.value).toMatchObject({
+                            0: VALID_STRING,
+                            1: VALID_STRING,
+                            2: VALID_STRING,
+                        });
+                    }, 100);
                 });
 
                 it("should set isDirty for all child fields that change", () => {
@@ -433,11 +522,12 @@ describe("TupleValidationHandler", () => {
 
                     handler.value.value.copyWithin(0, 1);
 
-                    expect(handler.value).toEqual([
-                        DEFAULT_NUMBER,
-                        DEFAULT_BOOLEAN,
-                        DEFAULT_BOOLEAN,
-                    ]);
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: DEFAULT_NUMBER,
+                        1: DEFAULT_BOOLEAN,
+                        2: DEFAULT_BOOLEAN,
+                    });
                 });
 
                 it("should set isDirty for all child fields that change", () => {
@@ -449,7 +539,7 @@ describe("TupleValidationHandler", () => {
 
                     expect(handler.fields[0].isDirty).toBe(true);
                     expect(handler.fields[1].isDirty).toBe(true);
-                    expect(handler.fields[2].isDirty).toBe(true);
+                    expect(handler.fields[2].isDirty).toBe(false);
                 });
             });
 
@@ -461,11 +551,12 @@ describe("TupleValidationHandler", () => {
 
                     handler.value.value.reverse();
 
-                    expect(handler.value).toEqual([
-                        DEFAULT_BOOLEAN,
-                        DEFAULT_NUMBER,
-                        DEFAULT_STRING,
-                    ]);
+                    expect(handler.value.value).toBeInstanceOf(Array);
+                    expect(handler.value.value).toMatchObject({
+                        0: DEFAULT_BOOLEAN,
+                        1: DEFAULT_NUMBER,
+                        2: DEFAULT_STRING,
+                    });
                 });
 
                 it("should set isDirty for all child fields that change", () => {
@@ -512,6 +603,9 @@ describe("TupleValidationHandler", () => {
                 new SchemaValidationError(["boolean error"])
             );
             const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
+
+            handler.validate();
+
             expect(handler.errors.value).toBeIterable([
                 "string error",
                 "number error",
@@ -552,9 +646,9 @@ describe("TupleValidationHandler", () => {
             initializeObjectSchemaMock();
             initializeArraySchemaMock();
             when(tupleSchemaMock.fields).thenReturn([
-                stringSchemaMock,
-                objectSchemaMock,
-                arraySchemaMock,
+                instance(stringSchemaMock),
+                instance(objectSchemaMock),
+                instance(arraySchemaMock),
             ]);
             const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
 
@@ -586,6 +680,8 @@ describe("TupleValidationHandler", () => {
             );
             const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
 
+            handler.validate();
+
             expect(handler.isValid.value).toBe(false);
         });
 
@@ -597,6 +693,8 @@ describe("TupleValidationHandler", () => {
             when(booleanSchemaMock.validate(anything(), anything())).thenReturn(true);
             const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
 
+            handler.validate();
+
             expect(handler.isValid.value).toBe(false);
         });
 
@@ -606,6 +704,8 @@ describe("TupleValidationHandler", () => {
             when(numberSchemaMock.validate(anything(), anything())).thenReturn(true);
             when(booleanSchemaMock.validate(anything(), anything())).thenReturn(true);
             const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
+
+            handler.validate();
 
             expect(handler.isValid.value).toBe(true);
         });
@@ -648,7 +748,9 @@ describe("TupleValidationHandler", () => {
     describe("validate method", () => {
         describe("given valid data", () => {
             beforeEach(() => {
-                when(tupleSchemaMock.validateRoot(VALID_TUPLE as any, anything())).thenReturn(true);
+                when(
+                    tupleSchemaMock.validateRoot(anyArrayWithValues(VALID_TUPLE), anything())
+                ).thenReturn(true);
                 when(stringSchemaMock.validate(VALID_STRING, anything())).thenReturn(true);
                 when(numberSchemaMock.validate(VALID_NUMBER, anything())).thenReturn(true);
                 when(booleanSchemaMock.validate(VALID_BOOLEAN, anything())).thenReturn(true);
@@ -671,9 +773,9 @@ describe("TupleValidationHandler", () => {
             });
 
             it("should reset errors", () => {
-                when(tupleSchemaMock.validateRoot(INVALID_TUPLE, anything())).thenThrow(
-                    new SchemaValidationError(["root error"])
-                );
+                when(
+                    tupleSchemaMock.validateRoot(anyArrayWithValues(INVALID_TUPLE), anything())
+                ).thenThrow(new SchemaValidationError(["root error"]));
                 when(stringSchemaMock.validate(INVALID_STRING, anything())).thenThrow(
                     new SchemaValidationError(["string error"])
                 );
@@ -689,7 +791,7 @@ describe("TupleValidationHandler", () => {
 
                 handler.validate();
 
-                expect(handler.errors.value).toEqual({
+                expect(handler.errors.value).toMatchObject({
                     $root: ["root error"],
                     0: ["string error"],
                     1: ["number error"],
@@ -700,7 +802,7 @@ describe("TupleValidationHandler", () => {
 
                 handler.validate();
 
-                expect(handler.errors.value).toEqual({
+                expect(handler.errors.value).toMatchObject({
                     $root: [],
                     0: [],
                     1: [],
@@ -711,9 +813,9 @@ describe("TupleValidationHandler", () => {
 
         describe("given invalid data", () => {
             beforeEach(() => {
-                when(tupleSchemaMock.validateRoot(INVALID_TUPLE, anything())).thenThrow(
-                    new SchemaValidationError(["root error"])
-                );
+                when(
+                    tupleSchemaMock.validateRoot(anyArrayWithValues(INVALID_TUPLE), anything())
+                ).thenThrow(new SchemaValidationError(["root error"]));
                 when(stringSchemaMock.validate(INVALID_STRING, anything())).thenThrow(
                     new SchemaValidationError(["string error"])
                 );
@@ -752,7 +854,7 @@ describe("TupleValidationHandler", () => {
 
                 handler.validate();
 
-                expect(handler.errors.value).toEqual({
+                expect(handler.errors.value).toMatchObject({
                     $root: ["root error"],
                     0: ["string error"],
                     1: ["number error"],
@@ -780,7 +882,7 @@ describe("TupleValidationHandler", () => {
 
                 handler.reset(VALID_TUPLE);
 
-                expect(handler.value.value).toEqual(VALID_TUPLE);
+                expect(handler.value.value).toBeIterable(VALID_TUPLE);
                 expect(handler.fields[0].value).toBe(VALID_STRING);
                 expect(handler.fields[1].value).toBe(VALID_NUMBER);
                 expect(handler.fields[2].value).toBe(VALID_BOOLEAN);
@@ -793,16 +895,16 @@ describe("TupleValidationHandler", () => {
 
                 handler.reset(VALID_TUPLE);
 
-                expect(handler.value).toEqual(VALID_TUPLE);
+                expect(handler.value.value).toBeIterable(VALID_TUPLE);
                 expect(handler.fields[0].value).toBe(VALID_STRING);
                 expect(handler.fields[1].value).toBe(VALID_NUMBER);
                 expect(handler.fields[2].value).toBe(VALID_BOOLEAN);
 
-                handler.reset();
-
                 handler.value.value = DEFAULT_TUPLE;
 
-                expect(handler.value.value).toEqual(VALID_TUPLE);
+                handler.reset();
+
+                expect(handler.value.value).toBeIterable(VALID_TUPLE);
                 expect(handler.fields[0].value).toBe(VALID_STRING);
                 expect(handler.fields[1].value).toBe(VALID_NUMBER);
                 expect(handler.fields[2].value).toBe(VALID_BOOLEAN);
@@ -817,7 +919,7 @@ describe("TupleValidationHandler", () => {
 
                     handler.reset([undefined, VALID_NUMBER, VALID_BOOLEAN]);
 
-                    expect(handler.value.value).toEqual([
+                    expect(handler.value.value).toBeIterable([
                         DEFAULT_STRING,
                         VALID_NUMBER,
                         VALID_BOOLEAN,
@@ -835,7 +937,7 @@ describe("TupleValidationHandler", () => {
 
                     handler.reset([undefined, VALID_NUMBER, VALID_BOOLEAN]);
 
-                    expect(handler.value.value).toEqual([null, VALID_NUMBER, VALID_BOOLEAN]);
+                    expect(handler.value.value).toBeIterable([null, VALID_NUMBER, VALID_BOOLEAN]);
                     expect(handler.fields[0].value).toBeNull();
                     expect(handler.fields[1].value).toBe(VALID_NUMBER);
                     expect(handler.fields[2].value).toBe(VALID_BOOLEAN);
@@ -853,7 +955,7 @@ describe("TupleValidationHandler", () => {
 
                 handler.reset();
 
-                expect(handler.value.value).toEqual(DEFAULT_TUPLE);
+                expect(handler.value.value).toBeIterable(DEFAULT_TUPLE);
             });
         });
 
@@ -921,7 +1023,7 @@ describe("TupleValidationHandler", () => {
 
             handler.fields[0].value = VALID_STRING;
             handler.fields[1].value = VALID_NUMBER;
-            handler.fields[2].value = VALID_BOOLEAN;
+            handler.fields[2].value = !handler.fields[2].value;
 
             expect(handler.fields[0].isDirty).toBe(true);
             expect(handler.fields[1].isDirty).toBe(true);
@@ -942,22 +1044,139 @@ describe("TupleValidationHandler", () => {
 
                 const reactive = handler.toReactive();
 
-                expect(reactive).toBeSchemaValidation();
+                expect(reactive).toBeSchemaValidation(Array);
             });
 
-            describe("errors property", () => {});
+            describe("errors property", () => {
+                it("should throw error when assigned", () => {
+                    const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
 
-            describe("fields property", () => {});
+                    const reactive = handler.toReactive();
 
-            it("should have readonly isValid property", () => {});
+                    expect(() => {
+                        //@ts-expect-error
+                        reactive.errors = null as any;
+                    }).toThrow();
+                });
 
-            it("should have readonly isDirty property", () => {});
+                it("should have a property for each schema field", () => {
+                    const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(reactive.errors).toHaveProperty("0", expect.toBeIterable());
+                    expect(reactive.errors).toHaveProperty("1", expect.toBeIterable());
+                    expect(reactive.errors).toHaveProperty("2", expect.toBeIterable());
+                });
+
+                it("should have readonly $root property", () => {
+                    const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(reactive.errors).toHaveProperty("$root", expect.toBeIterable());
+
+                    //@ts-expect-error
+                    reactive.errors.$root = null as any;
+                });
+
+                it("should have readonly properties", () => {
+                    const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
+
+                    const reactive: TupleSchemaValidation<[string, number, boolean]> =
+                        handler.toReactive() as any;
+
+                    //@ts-expect-error
+                    reactive.errors[0] = null as any;
+                    //@ts-expect-error
+                    reactive.errors[1] = null as any;
+                    //@ts-expect-error
+                    reactive.errors[2] = null as any;
+
+                    expect(reactive.errors[0]).not.toBeNull();
+                    expect(reactive.errors[1]).not.toBeNull();
+                    expect(reactive.errors[2]).not.toBeNull();
+                });
+            });
+
+            describe("fields property", () => {
+                it("should throw error when assigned", () => {
+                    const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(() => {
+                        //@ts-expect-error
+                        reactive.fields = null as any;
+                    }).toThrow();
+                });
+
+                it("should have a property for each schema field", () => {
+                    const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(reactive.fields).toHaveProperty("0", expect.toBeSchemaValidation());
+                    expect(reactive.fields).toHaveProperty("1", expect.toBeSchemaValidation());
+                    expect(reactive.fields).toHaveProperty("2", expect.toBeSchemaValidation());
+                });
+
+                it("should have readonly properties", () => {
+                    const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
+
+                    const reactive: TupleSchemaValidation<[string, number, boolean]> =
+                        handler.toReactive() as any;
+
+                    //@ts-expect-error
+                    reactive.fields[0] = null as any;
+                    //@ts-expect-error
+                    reactive.fields[1] = null as any;
+                    //@ts-expect-error
+                    reactive.fields[2] = null as any;
+
+                    expect(reactive.fields[0]).not.toBeNull();
+                    expect(reactive.fields[1]).not.toBeNull();
+                    expect(reactive.fields[2]).not.toBeNull();
+                });
+            });
+
+            describe("isValid property", () => {
+                it("should throw an error when assigned", () => {
+                    const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(() => {
+                        //@ts-expect-error
+                        reactive.isValid = null as any;
+                    }).toThrow();
+                });
+            });
+
+            describe("isDirty property", () => {
+                it("should throw an error when assigned", () => {
+                    const handler = TupleValidationHandler.create(instance(tupleSchemaMock), {});
+
+                    const reactive = handler.toReactive();
+
+                    expect(() => {
+                        //@ts-expect-error
+                        reactive.isDirty = null as any;
+                    }).toThrow();
+                });
+            });
         });
     });
 
     describe("static create method", () => {
         describe("given initial value", () => {
-            it("should throw a TypeError if provided value is not an array", () => {});
+            it("should throw a TypeError if provided value is not an array", () => {
+                expect(() =>
+                    TupleValidationHandler.create(instance(tupleSchemaMock), {
+                        value: null as any,
+                    })
+                ).toThrow(TypeError);
+            });
         });
     });
 });

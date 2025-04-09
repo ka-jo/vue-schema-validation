@@ -1,6 +1,6 @@
 import { ISchemaValidation, SchemaValidation } from "@/Types/SchemaValidation";
 import { TupleValidationHandler } from "@/ValidationHandler/TupleValidationHandler";
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 import { Tuple } from "./util";
 import { ValidationHandler } from "@/ValidationHandler";
 
@@ -9,7 +9,7 @@ export interface TupleSchemaValidation<T extends Array<unknown> = Array<unknown>
     /**
      * @internal
      */
-    readonly [HandlerInstance]: ValidationHandler<T>;
+    readonly [Handler]: ValidationHandler<T>;
     get value(): T;
     set value(value: Partial<T>);
     readonly fields: TupleSchemaValidationFields<T>;

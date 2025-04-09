@@ -1,4 +1,4 @@
-import { HandlerInstance } from "@/common";
+import { Handler } from "@/common";
 import { ValidationHandler } from "@/ValidationHandler";
 
 expect.extend({
@@ -15,7 +15,7 @@ expect.extend({
                         : undefined,
                 isValid: expect.any(Boolean),
                 isDirty: expect.any(Boolean),
-                [HandlerInstance]: expect.any(ValidationHandler),
+                [Handler]: expect.any(ValidationHandler),
             });
 
             expect(received).toBeReactive();

@@ -17,10 +17,12 @@ expect.extend({
             if (expected.length !== receivedValues.length) {
                 return failure(received, receivedValues, this.isNot, expected);
             }
+            let i = 0;
             for (const value of expected) {
-                if (!receivedValues.includes(value)) {
+                if (receivedValues[i] !== value) {
                     return failure(received, receivedValues, this.isNot, expected);
                 }
+                i++;
             }
         }
         return success(received, this.isNot, expected);

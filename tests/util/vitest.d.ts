@@ -14,10 +14,10 @@ interface CustomMatchers<R = unknown> {
     toBeReactive: () => R;
     /**
      * Verify that the received value implements the iterable protocol.
-     * @param expected - Optional array of values that should be present in the iterable. Does not verify the order of the values.
+     * @param expected - Optional array of values that should be present in the iterable. It also verifies the order of the elements.
      * @remarks
      * If expected values are provided, the matcher will verify that the received value implements the iterable protocol,
-     * that is the same number of elements, and that it contains all of the expected values, but in no particular order.
+     * that is the same number of elements, and that it contains all of the expected values in the same order as the expected values.
      * If no expected values are provided, the matcher will only verify that the received value implements the iterable protocol.
      */
     toBeIterable: (expected?: Array<unknown>) => R;
