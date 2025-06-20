@@ -47,7 +47,7 @@ export class PrimitiveValidationHandler extends ValidationHandler<unknown> {
         return this.isValid.value;
     }
 
-    reset(value?: unknown): void {
+    reset(value: unknown = this.options.value): void {
         this.setValue(value);
         this.errors.value = [];
         this.isValid.value = false;

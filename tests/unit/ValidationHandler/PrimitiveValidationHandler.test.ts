@@ -13,6 +13,7 @@ describe("PrimitiveValidationHandler", () => {
 
     beforeEach(() => {
         schemaMock = mock<Schema<"primitive">>();
+        when(schemaMock.defaultValue).thenReturn(DEFAULT_STRING);
     });
 
     describe("value property", () => {

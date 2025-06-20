@@ -4,7 +4,7 @@ import { anything, instance, when } from "ts-mockito";
 import { ObjectValidationHandler } from "@/ValidationHandler";
 import { SchemaValidationError } from "@/Schema";
 
-import { VALID_TEST_OBJECT } from "tests/fixtures/valid-data";
+import { VALID_STRING, VALID_TEST_OBJECT } from "tests/fixtures/valid-data";
 import {
     DEFAULT_BOOLEAN,
     DEFAULT_NESTED_OBJECT,
@@ -655,20 +655,49 @@ describe("ObjectValidationHandler", () => {
             });
 
             describe("when value is a partial", () => {
-                it("should merge provided value with initial value", () => {
+                it("should use field defaults for missing values", () => {
                     const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                         value: INVALID_TEST_OBJECT,
                     });
 
                     handler.reset({
-                        stringField: VALID_TEST_OBJECT.stringField,
+                        stringField: VALID_STRING,
                     });
 
                     expect(handler.value.value).toEqual({
-                        stringField: VALID_TEST_OBJECT.stringField,
-                        numberField: INVALID_TEST_OBJECT.numberField,
-                        booleanField: INVALID_TEST_OBJECT.booleanField,
-                        objectField: INVALID_TEST_OBJECT.objectField,
+                        stringField: VALID_STRING,
+                        numberField: DEFAULT_NUMBER,
+                        booleanField: DEFAULT_BOOLEAN,
+                        objectField: DEFAULT_NESTED_OBJECT,
+                    });
+                });
+
+                it("should result in null value if no field default for missing values", () => {
+                    when(stringSchemaMock.defaultValue).thenReturn(undefined);
+                    when(numberSchemaMock.defaultValue).thenReturn(undefined);
+                    when(booleanSchemaMock.defaultValue).thenReturn(undefined);
+                    when(nestedObjectSchemaMock.defaultValue).thenReturn(undefined);
+                    when(nestedStringSchemaMock.defaultValue).thenReturn(undefined);
+                    when(nestedNumberSchemaMock.defaultValue).thenReturn(undefined);
+                    when(nestedBooleanSchemaMock.defaultValue).thenReturn(undefined);
+
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
+                        value: INVALID_TEST_OBJECT,
+                    });
+
+                    handler.reset({
+                        stringField: VALID_STRING,
+                    });
+
+                    expect(handler.value.value).toEqual({
+                        stringField: VALID_STRING,
+                        numberField: null,
+                        booleanField: null,
+                        objectField: {
+                            nestedStringField: null,
+                            nestedNumberField: null,
+                            nestedBooleanField: null,
+                        },
                     });
                 });
             });
