@@ -70,7 +70,8 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
 
         for (const key of Object.keys(this.fields)) {
             const field = this.fields[key];
-            field.reset(value[key]);
+            const fieldValue = value[key] ?? this.options.value?.[key];
+            field.reset(fieldValue);
         }
 
         this._triggerValue();
@@ -97,12 +98,12 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
         }
     }
 
-    protected getValue(): POJO {
+    public getValue(): POJO {
         this._trackValue();
         return this._value;
     }
 
-    protected setValue(value: POJO) {
+    public setValue(value: POJO) {
         value = Object.assign({}, this.schema.defaultValue, value);
         for (const key of Object.keys(this.fields)) {
             const field = this.fields[key];

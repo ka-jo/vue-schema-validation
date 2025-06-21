@@ -12,7 +12,12 @@ import {
     DEFAULT_STRING,
     DEFAULT_TEST_OBJECT,
 } from "tests/fixtures/default-data";
-import { INVALID_TEST_OBJECT } from "tests/fixtures/invalid-data";
+import {
+    INVALID_BOOLEAN,
+    INVALID_NESTED_OBJECT,
+    INVALID_NUMBER,
+    INVALID_TEST_OBJECT,
+} from "tests/fixtures/invalid-data";
 import {
     objectSchemaMock,
     booleanSchemaMock,
@@ -655,9 +660,26 @@ describe("ObjectValidationHandler", () => {
             });
 
             describe("when value is a partial", () => {
-                it("should use field defaults for missing values", () => {
+                it("should use initial value for missing field values", () => {
                     const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
                         value: INVALID_TEST_OBJECT,
+                    });
+
+                    handler.reset({
+                        stringField: VALID_STRING,
+                    });
+
+                    expect(handler.value.value).toEqual({
+                        stringField: VALID_STRING,
+                        numberField: INVALID_NUMBER,
+                        booleanField: INVALID_BOOLEAN,
+                        objectField: INVALID_NESTED_OBJECT,
+                    });
+                });
+
+                it("should use field defaults if no initial value for missing fields values", () => {
+                    const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
+                        value: { stringField: DEFAULT_STRING },
                     });
 
                     handler.reset({
@@ -672,7 +694,7 @@ describe("ObjectValidationHandler", () => {
                     });
                 });
 
-                it("should result in null value if no field default for missing values", () => {
+                it("should use null if no field default and no initial value for missing field values", () => {
                     when(stringSchemaMock.defaultValue).thenReturn(undefined);
                     when(numberSchemaMock.defaultValue).thenReturn(undefined);
                     when(booleanSchemaMock.defaultValue).thenReturn(undefined);
@@ -682,7 +704,7 @@ describe("ObjectValidationHandler", () => {
                     when(nestedBooleanSchemaMock.defaultValue).thenReturn(undefined);
 
                     const handler = ObjectValidationHandler.create(instance(objectSchemaMock), {
-                        value: INVALID_TEST_OBJECT,
+                        value: { stringField: DEFAULT_STRING },
                     });
 
                     handler.reset({
