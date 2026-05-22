@@ -21,7 +21,7 @@ export class ObjectValidationHandler extends ValidationHandler<POJO> {
     private _value: POJO;
     private _rootErrors: Ref<ReadonlyArray<string>>;
 
-    readonly schema!: Schema<"object">;
+    declare readonly schema: Schema<"object">;
     readonly errors: Ref<ObjectSchemaValidationErrors>;
     /**
      * Object containing the SchemaValidation instances for each field in the object

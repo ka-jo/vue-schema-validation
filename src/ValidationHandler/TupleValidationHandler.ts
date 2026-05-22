@@ -24,7 +24,7 @@ export class TupleValidationHandler extends ValidationHandler<Array<unknown>> {
     private readonly _isRootDirty: Ref<boolean>;
     private readonly _rootErrors: Ref<ReadonlyArray<string>>;
 
-    readonly schema!: Schema<"tuple">;
+    declare readonly schema: Schema<"tuple">;
     readonly errors: Ref<TupleSchemaValidationErrors<Array<unknown>>>;
     readonly fields: TupleSchemaValidationFields<Array<unknown>>;
     readonly isValid: Ref<boolean>;

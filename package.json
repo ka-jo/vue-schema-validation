@@ -6,15 +6,18 @@
   "type": "module",
   "scripts": {
     "test": "vitest --typecheck",
-    "bench": "vitest bench"
+    "bench": "vitest bench",
+    "typecheck": "tsgo --noEmit"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.6.3+sha512.bb45e34d50a9a76e858a95837301bfb6bd6d35aea2c5d52094fa497a467c43f5c440103ce2511e9e0a2f89c3d6071baac3358fc68ac6fb75e2ceb3d2736065e6",
   "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20260522.1",
     "jsdom": "^26.0.0",
     "ts-mockito": "^2.6.1",
+    "typescript": "^6.0.3",
     "vite": "^6.1.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.6",

@@ -20,7 +20,7 @@ export class ArrayValidationHandler extends ValidationHandler<Array<unknown>> {
     private _fields: Map<number, SchemaValidation>;
     private _stopFieldsWatcher: () => void = noop;
 
-    readonly schema!: Schema<"array">;
+    declare readonly schema: Schema<"array">;
     readonly errors: Ref<ArraySchemaValidationErrors, ErrorObjectWithRoot>;
     readonly fields: Ref<ReadonlyArray<SchemaValidation>>;
     readonly isValid: ReadonlyRef<boolean>;
